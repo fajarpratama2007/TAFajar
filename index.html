@@ -183,9 +183,10 @@ button,input{font-family:inherit}
   <div class="cw">
     <div class="ch">
       <div class="range" id="rangeBtns">
+        <button data-h="0" class="on">Live</button>
         <button data-h="1">1 jam</button>
         <button data-h="6">6 jam</button>
-        <button data-h="24" class="on">24 jam</button>
+        <button data-h="24">24 jam</button>
         <button data-h="168">7 hari</button>
       </div>
       <button class="linkbtn" id="csvBtn">Unduh CSV</button>
@@ -377,9 +378,17 @@ const cH2 = new LineChart($('cH2'), [
 const redraw = () => { cPwr.draw(); cH2.draw(); };
 
 /* ================= STATE ================= */
-let sb = null, rangeH = 24, seriesRows = [];
+let sb = null, rangeH = 0, seriesRows = [];   // rangeH 0 = Live (dari stream Realtime)
+const MAXLIVE = 240;                           // 240 titik x ~0,5 dtk = ~2 menit
 let lastUpdatedAt = null, lastSeen = 0, firstState = true, curData = null;
-let histTimer = null, pollTimer = null, ageTimer = null;
+let histTimer = null, pollTimer = null, ageTimer = null, viewTimer = null;
+
+// Beri tahu server bahwa ada yang menonton -> ESP32 beralih ke mode cepat (0,5 dtk)
+function pingViewer() {
+  if (document.visibilityState !== 'visible') return;
+  sb.rpc('viewer_ping', { p_device: DEV }).then(() => {}, () => {});
+}
+document.addEventListener('visibilitychange', () => { if (sb && document.visibilityState === 'visible') pingViewer(); });
 
 const isOnline = () => lastSeen > 0 && Date.now() - lastSeen < ONLINE_MS;
 
@@ -422,16 +431,27 @@ function updCards(d) {
   setT('srvPct', Math.round(pct * 100) + '%');
 }
 
+function pushLive(d) {
+  T.push(Date.now()); PW.push(num(d.pv.w)); LW.push(num(d.ld.w)); BW.push(num(d.bt.w));
+  HA.push(num(d.ld.a)); HT.push(num(d.h2a));
+  while (T.length > MAXLIVE) ALL.forEach(a => a.shift());
+  redraw();
+}
+
 function onState(row) {
   if (!row || !row.data || !row.data.pv) return;
+  const prevStamp = lastUpdatedAt;
   if (row.updated_at !== lastUpdatedAt) {
     lastUpdatedAt = row.updated_at;
     // waktu lokal saat perubahan diterima → kebal terhadap selisih jam
     lastSeen = firstState ? (Date.now() - Date.parse(row.updated_at) < ONLINE_MS ? Date.now() : 0) : Date.now();
   }
+  const isNew = firstState || row.updated_at !== prevStamp;
   firstState = false;
   curData = row.data;
-  setT('updLbl', 'Update ' + fmtT(Date.parse(row.updated_at)));
+  setT('updLbl', 'Update ' + fmtT(Date.parse(row.updated_at)) +
+       (row.data.rtt ? ' · latensi ' + row.data.rtt + ' ms' : ''));
+  if (isNew && rangeH === 0) pushLive(row.data);
   updCards(curData);
   updatePolarity(curData);
   refreshOnline();
@@ -525,6 +545,7 @@ async function fetchState() {
 }
 
 async function loadHistory() {
+  if (rangeH === 0) return;   // mode Live: titik datang dari stream, bukan dari histori
   const { data, error } = await sb.rpc('telemetry_series', { p_device: DEV, p_hours: rangeH });
   if (error) { setT('histMsg', 'Gagal memuat histori: ' + error.message); return; }
   seriesRows = data || [];
@@ -555,7 +576,14 @@ $('rangeBtns').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   rangeH = parseInt(b.dataset.h, 10);
   [...$('rangeBtns').children].forEach(x => x.classList.toggle('on', x === b));
-  loadHistory();
+  if (rangeH === 0) {
+    ALL.forEach(a => a.length = 0); seriesRows = []; xFmt = fmtT; redraw();
+    setT('histMsg', 'Mode Live: grafik terisi dari data yang masuk sejak halaman dibuka');
+    if (curData && curData.pv) pushLive(curData);
+  } else {
+    setT('histMsg', '');
+    loadHistory();
+  }
 });
 
 /* ================= APP LIFECYCLE ================= */
@@ -564,6 +592,9 @@ function startApp() {
   firstState = true; lastSeen = 0; lastUpdatedAt = null;
 
   fetchState(); loadHistory();
+  setT('histMsg', 'Mode Live: grafik terisi dari data yang masuk sejak halaman dibuka');
+  pingViewer();
+  viewTimer = setInterval(pingViewer, 10000);
   sb.channel('ems-' + DEV)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'device_state', filter: 'device_id=eq.' + DEV }, p => onState(p.new))
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'commands', filter: 'device_id=eq.' + DEV }, p => onCommand(p.new))
