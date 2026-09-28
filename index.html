@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>EMS Dashboard</title>
+<style>
+:root{
+  --bg:#0f1117;--bg2:#1a1d27;--bg3:#22263a;
+  --card:#1e2235;--border:#2e3350;
+  --text:#e2e8f0;--muted:#94a3b8;
+  --green:#22c55e;--yellow:#facc15;--red:#ef4444;
+  --blue:#38bdf8;--purple:#a78bfa;--orange:#fb923c;--teal:#2dd4bf;
+  --r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh;line-height:1.35}
+button,input{font-family:inherit}
+[hidden]{display:none!important}
+
+/* ---------- topbar ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:12px 20px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.topbar h1{font-size:16px;font-weight:600;white-space:nowrap}
+.topbar h1 em{color:var(--blue);font-style:normal}
+.tr{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);flex-wrap:wrap;justify-content:flex-end}
+.dotx{width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 6px var(--red);transition:all .4s;flex-shrink:0}
+.dotx.on{background:var(--green);box-shadow:0 0 6px var(--green)}
+.linkbtn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer}
+.linkbtn:hover{color:var(--text);border-color:var(--blue)}
+.alert{padding:10px 20px;font-size:13px;font-weight:600;text-align:center;border-bottom:1px solid transparent}
+.alert.err{background:#2d1010;color:var(--red);border-color:#ef444440}
+.alert.warn{background:#2d2200;color:var(--yellow);border-color:#facc1540}
+
+/* ---------- login ---------- */
+.login-wrap{min-height:calc(100vh - 50px);display:flex;align-items:center;justify-content:center;padding:20px}
+.login{width:100%;max-width:360px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px}
+.login h2{font-size:18px;margin-bottom:4px}
+.login p{font-size:12px;color:var(--muted);margin-bottom:16px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:11px;color:var(--muted);font-weight:600}
+.field input{background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 12px;font-size:14px;outline:none}
+.field input:focus{border-color:var(--blue)}
+.btn{padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .2s}
+.btn-main{width:100%;background:#0e2233;color:var(--blue);border-color:#38bdf840}
+.btn-main:hover{background:#12304a}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.err-msg{font-size:12px;color:var(--red);min-height:16px;margin-top:10px}
+.setup-note{max-width:560px;margin:40px auto;padding:20px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);font-size:13px;line-height:1.6}
+.setup-note code{background:var(--bg3);padding:1px 6px;border-radius:5px}
+
+/* ---------- layout ---------- */
+.main{padding:16px 20px 40px;max-width:1100px;margin:auto}
+.main.stale .cards,.main.stale .cw{opacity:.55}
+.sec{font-size:11px;font-weight:600;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin:22px 0 10px}
+.sec:first-child{margin-top:4px}
+.state-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{padding:5px 14px;border-radius:99px;font-size:12px;font-weight:600;letter-spacing:.5px;border:1px solid transparent;transition:all .3s}
+.b-ok{background:#16301e;color:var(--green);border-color:#22c55e40}
+.b-warn{background:#2d2200;color:var(--yellow);border-color:#facc1540}
+.b-err{background:#2d1010;color:var(--red);border-color:#ef444440}
+.b-inf{background:#0e2233;color:var(--blue);border-color:#38bdf840}
+.chip{padding:4px 11px;border-radius:99px;font-size:11px;font-weight:600;background:var(--bg3);color:var(--muted);border:1px solid var(--border)}
+.upd{font-size:11px;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;transition:opacity .3s}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px}
+.clb{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cval{font-size:26px;font-weight:700;line-height:1;margin-bottom:6px;font-variant-numeric:tabular-nums}
+.csub{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.csub b{color:var(--text);font-weight:500}
+.cpv .cval{color:var(--yellow)}.cld .cval{color:var(--blue)}.cbt .cval{color:var(--green)}.ch2 .cval{color:var(--purple)}
+.cw{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px;margin-bottom:12px;transition:opacity .3s}
+.ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+.ct{font-size:13px;font-weight:600}
+.cl{display:flex;gap:12px;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.ld{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.chart{position:relative;width:100%}
+.chart canvas{display:block;width:100%;height:100%;touch-action:pan-y}
+.range{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.range button{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer}
+.range button.on{color:var(--blue);border-color:#38bdf860;background:#0e2233}
+.hist-msg{font-size:11px;color:var(--yellow);min-height:14px;margin-top:6px}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.info-box{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:11px}
+.il{font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.iv{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.note{margin-top:12px;font-size:11px;color:var(--muted);line-height:1.6;background:var(--bg3);border-radius:8px;padding:10px 12px;border-left:3px solid var(--teal)}
+
+/* servo */
+.servo{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.servo-vals{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;flex:1;min-width:200px}
+.servo-vals .v{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:4px}
+.bar>div{height:100%;width:0;background:var(--purple);border-radius:3px;transition:width .3s}
+
+/* polaritas */
+.tg{width:44px;height:24px;background:var(--border);border-radius:12px;position:relative;transition:background .3s;flex-shrink:0}
+.tg::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .3s}
+.tg.on{background:var(--purple)}
+.tg.on::after{transform:translateX(20px)}
+.pol-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.pol-now{font-size:20px;font-weight:700}
+.pol-msg{font-size:11px;color:var(--yellow);min-height:15px;margin-top:2px}
+.pol-tog{display:flex;align-items:center;gap:12px;padding:8px 14px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:99px;cursor:pointer;user-select:none;outline:none;transition:opacity .2s,border-color .2s}
+.pol-tog:focus-visible{border-color:var(--blue)}
+.pol-tog.disabled{opacity:.5;cursor:not-allowed}
+.pol-tog span{font-size:12px;font-weight:600;color:var(--muted);transition:color .3s;line-height:1.1;text-align:center}
+.pol-tog span small{display:block;font-size:9px;font-weight:500;letter-spacing:.5px}
+.pol-tog.p1 .pt-l{color:var(--text)}
+.pol-tog.p2 .pt-r{color:var(--text)}
+.progress{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:14px;opacity:0;transition:opacity .3s}
+.progress.run{opacity:1}
+.progress>div{height:100%;width:0;background:var(--yellow)}
+.progress.run>div{animation:fill 3.3s linear forwards}
+@keyframes fill{from{width:0}to{width:100%}}
+
+@media(max-width:580px){
+  .topbar{padding:10px 14px}
+  .main{padding:12px 14px 32px}
+  .cval{font-size:22px}
+  .alert{padding:9px 14px}
+  #userLbl{display:none}
+}
+</style>
+</head>
+
+<body>
+<header class="topbar">
+  <h1>⚡ EMS <em>Dashboard</em></h1>
+  <div class="tr" id="topRight" hidden>
+    <div class="dotx" id="devDot"></div><span id="devLbl">Perangkat offline</span>
+    <span id="userLbl"></span>
+    <button class="linkbtn" id="logoutBtn">Keluar</button>
+  </div>
+</header>
+<div class="alert err" id="alert" hidden></div>
+
+<!-- belum dikonfigurasi -->
+<div class="setup-note" id="setupNote" hidden>
+  <b>Konfigurasi belum diisi.</b><br>
+  Buka <code>config.js</code> dan isi <code>SUPABASE_URL</code> serta <code>SUPABASE_ANON_KEY</code>
+  (Supabase → Project Settings → API, kunci <i>anon public</i>). Lihat README.md.
+</div>
+
+<!-- login -->
+<div class="login-wrap" id="loginView" hidden>
+  <form class="login" id="loginForm" autocomplete="on">
+    <h2>Masuk</h2>
+    <p>Login untuk melihat dan mengendalikan sistem EMS.</p>
+    <div class="field"><label for="email">Email</label>
+      <input id="email" type="email" autocomplete="username" required></div>
+    <div class="field"><label for="pass">Password</label>
+      <input id="pass" type="password" autocomplete="current-password" required></div>
+    <button class="btn btn-main" id="loginBtn" type="submit">Masuk</button>
+    <div class="err-msg" id="loginErr"></div>
+  </form>
+</div>
+
+<!-- aplikasi -->
+<main class="main" id="main" hidden>
+  <div class="sec">Status Sistem</div>
+  <div class="state-row">
+    <div class="badge b-inf" id="stBadge">—</div>
+    <span class="chip" id="polChip">Polaritas —</span>
+    <span class="upd" id="updLbl">Menunggu data…</span>
+  </div>
+
+  <div class="sec">Data Sensor</div>
+  <div class="cards">
+    <div class="card cpv">
+      <div class="clb"><div class="dot" style="background:var(--yellow)"></div>Solar PV</div>
+      <div class="cval" id="pvW">— W</div>
+      <div class="csub"><b id="pvV">—</b> V &nbsp;|&nbsp; <b id="pvA">—</b> A</div>
+    </div>
+    <div class="card cld">
+      <div class="clb"><div class="dot" style="background:var(--blue)"></div>Output HHO / Beban</div>
+      <div class="cval" id="ldW">— W</div>
+      <div class="csub"><b id="ldV">—</b> V &nbsp;|&nbsp; <b id="ldA">—</b> A</div>
+    </div>
+    <div class="card cbt">
+      <div class="clb"><div class="dot" style="background:var(--green)"></div>Baterai</div>
+      <div class="cval" id="btW">— W</div>
+      <div class="csub"><b id="btV">—</b> V &nbsp;|&nbsp; <b id="btA">—</b> A</div>
+    </div>
+    <div class="card ch2">
+      <div class="clb"><div class="dot" style="background:var(--purple)"></div>Target EMS H₂</div>
+      <div class="cval" id="h2W">— A</div>
+      <div class="csub">Raw: <b id="h2T">—</b> A &nbsp;|&nbsp; Surplus: <b id="surpC">—</b> W</div>
+    </div>
+  </div>
+
+  <div class="sec">Grafik Historis</div>
+  <div class="cw">
+    <div class="ch">
+      <div class="range" id="rangeBtns">
+        <button data-h="1">1 jam</button>
+        <button data-h="6">6 jam</button>
+        <button data-h="24" class="on">24 jam</button>
+        <button data-h="168">7 hari</button>
+      </div>
+      <button class="linkbtn" id="csvBtn">Unduh CSV</button>
+    </div>
+    <div class="ch">
+      <span class="ct">Daya Sistem (W)</span>
+      <div class="cl">
+        <div class="li"><div class="ld" style="background:#facc15"></div>PV</div>
+        <div class="li"><div class="ld" style="background:#38bdf8"></div>HHO/Beban</div>
+        <div class="li"><div class="ld" style="background:#22c55e"></div>Baterai</div>
+      </div>
+    </div>
+    <div class="chart" style="height:210px"><canvas id="cPwr"></canvas></div>
+    <div class="hist-msg" id="histMsg"></div>
+  </div>
+
+  <div class="cw">
+    <div class="ch">
+      <span class="ct">Arus HHO Sensor vs Target EMS (A)</span>
+      <div class="cl">
+        <div class="li"><div class="ld" style="background:#a78bfa"></div>Sensor</div>
+        <div class="li"><div class="ld" style="background:#2dd4bf"></div>Target</div>
+      </div>
+    </div>
+    <div class="chart" style="height:160px"><canvas id="cH2"></canvas></div>
+  </div>
+
+  <div class="sec">Servo HHO</div>
+  <div class="panel">
+    <div class="servo">
+      <svg width="96" height="58" viewBox="0 0 80 48" aria-hidden="true">
+        <path d="M8 44 A32 32 0 0 1 72 44" fill="none" stroke="var(--border)" stroke-width="5" stroke-linecap="round"/>
+        <path id="srvArc" d="M8 44 A32 32 0 0 1 72 44" fill="none" stroke="#a78bfa" stroke-width="5" stroke-linecap="round" stroke-dasharray="100.5" stroke-dashoffset="100.5"/>
+        <line id="srvNeedle" x1="40" y1="44" x2="40" y2="16" stroke="var(--text)" stroke-width="2" stroke-linecap="round" transform="rotate(-90 40 44)"/>
+        <circle cx="40" cy="44" r="3" fill="var(--text)"/>
+      </svg>
+      <div class="servo-vals">
+        <div><div class="il">Posisi</div><div class="v"><span id="srvDeg">0</span>°</div></div>
+        <div><div class="il">Target H₂</div><div class="v"><span id="srvTgt">0.00</span> A</div></div>
+        <div><div class="il">Arus HHO (INA219)</div><div class="v"><span id="srvAct">0.00</span> A</div></div>
+        <div><div class="il">Surplus PV</div><div class="v" style="color:var(--yellow)"><span id="srvSurp">0.0</span> W</div></div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:12px">
+      <span class="il" style="margin:0">Posisi relatif</span><span class="il" style="margin:0" id="srvPct">0%</span>
+    </div>
+    <div class="bar"><div id="srvBar"></div></div>
+  </div>
+
+  <div class="sec">Polaritas Output PWM</div>
+  <div class="panel">
+    <div class="pol-row">
+      <div>
+        <div class="il">Polaritas saat ini</div>
+        <div class="pol-now" id="polNow">—</div>
+        <div class="pol-msg" id="polMsg"></div>
+      </div>
+      <div class="pol-tog p1" id="polTog" role="switch" aria-checked="false" aria-label="Balik polaritas" tabindex="0">
+        <span class="pt-l">Kutub 1<small>NC</small></span>
+        <div class="tg" id="polTg"></div>
+        <span class="pt-r">Kutub 2<small>NO</small></span>
+      </div>
+    </div>
+    <div class="progress" id="polProg"><div></div></div>
+    <div class="note">Perintah dikirim lewat cloud dan diambil perangkat dalam ±2 detik. Urutan aman di perangkat: output diputus (cut) 3 detik → relay berpindah → output disambung kembali. Ditolak otomatis bila sistem sedang trip atau sensor error, dan perintah kedaluwarsa setelah 30 detik.</div>
+  </div>
+</main>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+'use strict';
+const CFG = window.EMS_CONFIG || {};
+const DEV = CFG.DEVICE_ID || 'ems-01';
+const CONFIGURED = !!(CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY &&
+                      !/YOUR/.test(CFG.SUPABASE_URL + CFG.SUPABASE_ANON_KEY));
+const ONLINE_MS = 12000;   // perangkat dianggap offline bila tidak ada update selama ini
+const H2MAX = 4.0;
+
+const $ = id => document.getElementById(id);
+const setT = (id, v) => { const e = $(id); if (e) e.textContent = v; };
+const num = (v, d = 0) => { const n = parseFloat(v); return Number.isFinite(n) ? n : d; };
+const fx = (v, d) => num(v).toFixed(d);
+const p2 = n => String(n).padStart(2, '0');
+const fmtT  = t => { const d = new Date(t); return p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds()); };
+const fmtDT = t => { const d = new Date(t); return p2(d.getDate()) + '/' + p2(d.getMonth() + 1) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()); };
+let xFmt = fmtT;
+
+/* ================= GRAFIK CANVAS ================= */
+const T = [], PW = [], LW = [], BW = [], HA = [], HT = [];
+const ALL = [T, PW, LW, BW, HA, HT];
+
+class LineChart {
+  constructor(canvas, series, o) {
+    this.c = canvas; this.g = canvas.getContext('2d');
+    this.series = series; this.o = o; this.hover = -1;
+    const move = e => {
+      const r = canvas.getBoundingClientRect(), n = T.length; if (n < 2) return;
+      const pw = r.width - 46 - 8;
+      const i = Math.round((e.clientX - r.left - 46) / pw * (n - 1));
+      this.hover = Math.max(0, Math.min(n - 1, i)); this.draw();
+    };
+    const leave = () => { this.hover = -1; this.draw(); };
+    canvas.addEventListener('mousemove', move);
+    canvas.addEventListener('mouseleave', leave);
+    canvas.addEventListener('touchstart', e => move(e.touches[0]), { passive: true });
+    canvas.addEventListener('touchmove', e => move(e.touches[0]), { passive: true });
+    canvas.addEventListener('touchend', leave);
+    if (window.ResizeObserver) new ResizeObserver(() => this.draw()).observe(canvas.parentElement);
+  }
+  draw() {
+    const c = this.c, p = c.parentElement, dpr = window.devicePixelRatio || 1;
+    const w = p.clientWidth, h = p.clientHeight;
+    if (!w || !h) return;
+    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
+      c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
+    }
+    const g = this.g;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, w, h);
+    const L = 46, R = 8, Tp = 8, B = 20, pw = w - L - R, ph = h - Tp - B, n = T.length;
+    g.font = '10px system-ui,sans-serif';
+    if (n < 2) {
+      g.fillStyle = '#64748b'; g.textAlign = 'center';
+      g.fillText('Belum ada data', w / 2, h / 2); g.textAlign = 'left';
+      return;
+    }
+    let lo = Infinity, hi = -Infinity;
+    this.series.forEach(s => s.data.forEach(v => { if (v < lo) lo = v; if (v > hi) hi = v; }));
+    if (this.o.floor !== undefined) lo = Math.min(lo, this.o.floor);
+    if (this.o.minTop !== undefined) hi = Math.max(hi, this.o.minTop);
+    if (hi - lo < 1e-6) hi = lo + 1;
+    const pad = (hi - lo) * 0.06; hi += pad;
+    if (this.o.floor === undefined) lo -= pad;
+    const Y = v => Tp + ph * (1 - (v - lo) / (hi - lo));
+    const X = i => L + pw * i / (n - 1);
+
+    g.strokeStyle = '#243049'; g.fillStyle = '#64748b'; g.lineWidth = 1; g.textAlign = 'right';
+    for (let k = 0; k <= 4; k++) {
+      const v = lo + (hi - lo) * k / 4, y = Y(v);
+      g.beginPath(); g.moveTo(L, y); g.lineTo(w - R, y); g.stroke();
+      g.fillText(v.toFixed(this.o.dec), L - 6, y + 3);
+    }
+    [0, Math.floor((n - 1) / 2), n - 1].forEach((i, k) => {
+      g.textAlign = k === 0 ? 'left' : (k === 2 ? 'right' : 'center');
+      g.fillText(xFmt(T[i]), X(i), h - 5);
+    });
+    g.textAlign = 'left';
+
+    this.series.forEach(s => {
+      g.beginPath();
+      s.data.forEach((v, i) => { if (i) g.lineTo(X(i), Y(v)); else g.moveTo(X(i), Y(v)); });
+      g.strokeStyle = s.color; g.lineWidth = s.width || 2;
+      g.setLineDash(s.dash || []); g.stroke(); g.setLineDash([]);
+      if (s.fill) {
+        g.lineTo(X(n - 1), Y(lo)); g.lineTo(X(0), Y(lo)); g.closePath();
+        g.fillStyle = s.color + '18'; g.fill();
+      }
+    });
+
+    if (this.hover >= 0 && this.hover < n) {
+      const i = this.hover, x = X(i);
+      g.strokeStyle = '#475569'; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(x, Tp); g.lineTo(x, Tp + ph); g.stroke();
+      this.series.forEach(s => { g.beginPath(); g.arc(x, Y(s.data[i]), 3, 0, 6.283); g.fillStyle = s.color; g.fill(); });
+      const lines = [xFmt(T[i])].concat(this.series.map(s => s.name + ': ' + s.data[i].toFixed(this.o.dec) + ' ' + this.o.unit));
+      g.font = '11px system-ui,sans-serif';
+      const tw = Math.max(...lines.map(t => g.measureText(t).width)) + 16, th = lines.length * 15 + 8;
+      let bx = x + 10; if (bx + tw > w - 4) bx = x - 10 - tw;
+      g.fillStyle = '#1e2235'; g.strokeStyle = '#2e3350';
+      g.fillRect(bx, Tp + 4, tw, th); g.strokeRect(bx, Tp + 4, tw, th);
+      lines.forEach((t, k) => {
+        g.fillStyle = k ? this.series[k - 1].color : '#94a3b8';
+        g.fillText(t, bx + 8, Tp + 4 + 15 + k * 15 - 3);
+      });
+    }
+  }
+}
+
+const cPwr = new LineChart($('cPwr'), [
+  { name: 'PV',        data: PW, color: '#facc15', fill: true },
+  { name: 'HHO/Beban', data: LW, color: '#38bdf8', fill: true },
+  { name: 'Baterai',   data: BW, color: '#22c55e', fill: true }
+], { dec: 0, unit: 'W' });
+const cH2 = new LineChart($('cH2'), [
+  { name: 'Sensor', data: HA, color: '#a78bfa', fill: true },
+  { name: 'Target', data: HT, color: '#2dd4bf', dash: [5, 4], width: 1.6 }
+], { dec: 2, unit: 'A', floor: 0, minTop: H2MAX + 0.5 });
+const redraw = () => { cPwr.draw(); cH2.draw(); };
+
+/* ================= STATE ================= */
+let sb = null, rangeH = 24, seriesRows = [];
+let lastUpdatedAt = null, lastSeen = 0, firstState = true, curData = null;
+let histTimer = null, pollTimer = null, ageTimer = null;
+
+const isOnline = () => lastSeen > 0 && Date.now() - lastSeen < ONLINE_MS;
+
+const BADGE = {
+  'DIRECT SUPPLY': 'b-ok', 'BATT CHARGING': 'b-ok',
+  'H2 PRODUCTION': 'b-inf', 'FUEL CELL': 'b-inf', 'STARTING': 'b-inf',
+  'TRIP HOLD': 'b-warn', 'TRIP RECOVERED': 'b-warn', 'POLARITY CHANGE': 'b-warn',
+  'TRIP OVERLOAD': 'b-err', 'SENSOR ERROR': 'b-err'
+};
+const ALERTS = {
+  'TRIP OVERLOAD': 'TRIP OVERLOAD — beban diputus, arus melebihi batas',
+  'TRIP HOLD': 'TRIP — menunggu arus turun sebelum beban disambung',
+  'SENSOR ERROR': 'SENSOR ERROR — semua tegangan terbaca nol, output diputus'
+};
+
+function showAlert(text, cls) {
+  const a = $('alert');
+  if (!text) { a.hidden = true; return; }
+  a.className = 'alert ' + cls; a.textContent = text; a.hidden = false;
+}
+
+function updCards(d) {
+  setT('pvW', fx(d.pv.w, 1) + ' W'); setT('pvV', fx(d.pv.v, 1)); setT('pvA', fx(d.pv.a, 2));
+  setT('ldW', fx(d.ld.w, 1) + ' W'); setT('ldV', fx(d.ld.v, 1)); setT('ldA', fx(d.ld.a, 2));
+  setT('btW', fx(d.bt.w, 1) + ' W'); setT('btV', fx(d.bt.v, 1)); setT('btA', fx(d.bt.a, 2));
+  const smooth = num(d.h2a), raw = num(d.h2t), surp = num(d.surp);
+  setT('h2W', smooth.toFixed(2) + ' A'); setT('h2T', raw.toFixed(2)); setT('surpC', surp.toFixed(1));
+
+  const s = String(d.state || '');
+  const b = $('stBadge');
+  b.textContent = s || '—';
+  b.className = 'badge ' + (BADGE[s] || 'b-inf');
+  if (ALERTS[s]) showAlert(ALERTS[s], 'err'); else if (isOnline()) showAlert('', '');
+
+  const deg = Math.max(0, Math.min(180, Math.round(num(d.srv)))), pct = deg / 180;
+  $('srvArc').setAttribute('stroke-dashoffset', (100.5 * (1 - pct)).toFixed(1));
+  $('srvNeedle').setAttribute('transform', 'rotate(' + (-90 + deg) + ' 40 44)');
+  setT('srvDeg', deg); setT('srvTgt', smooth.toFixed(2)); setT('srvAct', fx(d.ld.a, 2)); setT('srvSurp', surp.toFixed(1));
+  $('srvBar').style.width = Math.round(pct * 100) + '%';
+  setT('srvPct', Math.round(pct * 100) + '%');
+}
+
+function onState(row) {
+  if (!row || !row.data || !row.data.pv) return;
+  if (row.updated_at !== lastUpdatedAt) {
+    lastUpdatedAt = row.updated_at;
+    // waktu lokal saat perubahan diterima → kebal terhadap selisih jam
+    lastSeen = firstState ? (Date.now() - Date.parse(row.updated_at) < ONLINE_MS ? Date.now() : 0) : Date.now();
+  }
+  firstState = false;
+  curData = row.data;
+  setT('updLbl', 'Update ' + fmtT(Date.parse(row.updated_at)));
+  updCards(curData);
+  updatePolarity(curData);
+  refreshOnline();
+}
+
+function refreshOnline() {
+  const on = isOnline();
+  $('devDot').classList.toggle('on', on);
+  setT('devLbl', on ? 'Perangkat online' : 'Perangkat offline');
+  $('main').classList.toggle('stale', !on);
+  if (!on && lastSeen === 0 && firstState) showAlert('', '');
+  else if (!on) showAlert('Perangkat offline — data yang tampil adalah data terakhir', 'warn');
+  else if (!ALERTS[curData && curData.state]) showAlert('', '');
+  updateTogState();
+}
+
+/* ================= POLARITAS ================= */
+let polNow = 0, polBusy = false, polPending = -1, polCmdId = null, polTimer = null;
+const polMsg = t => setT('polMsg', t);
+
+function updateTogState() {
+  const tog = $('polTog');
+  const locked = polBusy || polPending >= 0 || !isOnline();
+  tog.classList.toggle('disabled', locked);
+  tog.classList.toggle('p1', polNow === 0);
+  tog.classList.toggle('p2', polNow === 1);
+  tog.setAttribute('aria-checked', polNow === 1 ? 'true' : 'false');
+  $('polTg').classList.toggle('on', polNow === 1);
+}
+
+function updatePolarity(d) {
+  polNow = Number(d.pol) === 1 ? 1 : 0;
+  polBusy = !!d.polb;
+  if (polPending >= 0 && !polBusy && polNow === polPending) {
+    polPending = -1; polCmdId = null; clearTimeout(polTimer);
+    polMsg('Polaritas berhasil diganti');
+    setTimeout(() => { if (!polBusy && polPending < 0) polMsg(''); }, 3000);
+  }
+  setT('polNow', polNow ? 'Kutub 2 (NO)' : 'Kutub 1 (NC)');
+  setT('polChip', 'Polaritas ' + (polNow + 1));
+  $('polProg').classList.toggle('run', polBusy);
+  if (polBusy) polMsg('Mengganti polaritas… output diputus sementara');
+  updateTogState();
+}
+
+function polFail(msg) {
+  polPending = -1; polCmdId = null; clearTimeout(polTimer);
+  polMsg(msg); updateTogState();
+}
+
+async function togglePolarity() {
+  if (polBusy || polPending >= 0) return;
+  if (!isOnline()) { polMsg('Perangkat offline, perintah tidak dikirim'); return; }
+  const target = polNow ? 0 : 1;
+  polPending = target; polMsg('Mengirim perintah…'); updateTogState();
+  clearTimeout(polTimer);
+  polTimer = setTimeout(() => {
+    if (polPending >= 0) polFail('Tidak ada respon dari perangkat (cek koneksi / trip / sensor error)');
+  }, 20000);
+  const { data, error } = await sb.from('commands')
+    .insert({ device_id: DEV, cmd: 'polarity', value: target }).select('id').single();
+  if (error) {
+    polFail(error.code === '23505' ? 'Masih ada perintah yang menunggu, coba sesaat lagi'
+                                   : 'Gagal mengirim: ' + error.message);
+    return;
+  }
+  polCmdId = data.id;
+  polMsg('Perintah terkirim, menunggu perangkat…');
+}
+
+function onCommand(c) {
+  if (!c || c.id !== polCmdId) return;
+  if (c.status === 'rejected') polFail('Ditolak perangkat: ' + (c.note || 'tanpa alasan'));
+  else if (c.status === 'done') {
+    polMsg(c.note ? 'Diterima: ' + c.note : 'Diterima, menunggu relay berpindah…');
+    if (c.note === 'sudah di posisi tersebut') polFail('Sudah di posisi tersebut');
+  }
+}
+
+$('polTog').addEventListener('click', togglePolarity);
+$('polTog').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePolarity(); }
+});
+
+/* ================= DATA ================= */
+async function fetchState() {
+  const { data, error } = await sb.from('device_state').select('*').eq('device_id', DEV).maybeSingle();
+  if (error) { setT('updLbl', 'Gagal membaca data: ' + error.message); return; }
+  if (!data) { setT('updLbl', 'Belum ada data dari perangkat'); return; }
+  onState(data);
+}
+
+async function loadHistory() {
+  const { data, error } = await sb.rpc('telemetry_series', { p_device: DEV, p_hours: rangeH });
+  if (error) { setT('histMsg', 'Gagal memuat histori: ' + error.message); return; }
+  seriesRows = data || [];
+  ALL.forEach(a => a.length = 0);
+  seriesRows.forEach(r => {
+    T.push(Date.parse(r.t)); PW.push(num(r.pv_w)); LW.push(num(r.ld_w)); BW.push(num(r.bt_w));
+    HA.push(num(r.ld_a)); HT.push(num(r.h2t));
+  });
+  xFmt = rangeH >= 24 ? fmtDT : fmtT;
+  setT('histMsg', seriesRows.length ? '' : 'Belum ada data histori pada rentang ini');
+  redraw();
+}
+
+function downloadCsv() {
+  if (!seriesRows.length) return;
+  const head = 'waktu,pv_w,ld_w,bt_w,ld_a,h2_target_a';
+  const lines = seriesRows.map(r => [new Date(r.t).toISOString(), r.pv_w, r.ld_w, r.bt_w, r.ld_a, r.h2t]
+    .map(v => (v === null || v === undefined) ? '' : (typeof v === 'number' ? v.toFixed(3) : v)).join(','));
+  const blob = new Blob([head + '\n' + lines.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ems-' + DEV + '-' + rangeH + 'jam.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+$('csvBtn').addEventListener('click', downloadCsv);
+$('rangeBtns').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  rangeH = parseInt(b.dataset.h, 10);
+  [...$('rangeBtns').children].forEach(x => x.classList.toggle('on', x === b));
+  loadHistory();
+});
+
+/* ================= APP LIFECYCLE ================= */
+function startApp(session) {
+  $('loginView').hidden = true; $('main').hidden = false; $('topRight').hidden = false;
+  setT('userLbl', session.user.email || '');
+  firstState = true; lastSeen = 0; lastUpdatedAt = null;
+
+  fetchState(); loadHistory();
+  sb.channel('ems-' + DEV)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'device_state', filter: 'device_id=eq.' + DEV }, p => onState(p.new))
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'commands', filter: 'device_id=eq.' + DEV }, p => onCommand(p.new))
+    .subscribe();
+
+  clearInterval(pollTimer); clearInterval(histTimer); clearInterval(ageTimer);
+  pollTimer = setInterval(fetchState, 5000);        // cadangan bila Realtime terputus
+  histTimer = setInterval(loadHistory, 30000);
+  ageTimer  = setInterval(refreshOnline, 1000);
+  window.addEventListener('resize', redraw);
+}
+
+function stopApp() {
+  clearInterval(pollTimer); clearInterval(histTimer); clearInterval(ageTimer);
+  if (sb) sb.removeAllChannels();
+  $('main').hidden = true; $('topRight').hidden = true; $('loginView').hidden = false;
+  showAlert('', '');
+}
+
+async function init() {
+  if (!CONFIGURED) { $('setupNote').hidden = false; return; }
+  if (!window.supabase) { showAlert('Library Supabase gagal dimuat (perlu internet)', 'err'); return; }
+  sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
+
+  $('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    $('loginBtn').disabled = true; setT('loginErr', '');
+    const { error } = await sb.auth.signInWithPassword({ email: $('email').value.trim(), password: $('pass').value });
+    $('loginBtn').disabled = false;
+    if (error) setT('loginErr', error.message === 'Invalid login credentials' ? 'Email atau password salah' : error.message);
+  });
+  $('logoutBtn').addEventListener('click', () => sb.auth.signOut());
+
+  let started = false;
+  sb.auth.onAuthStateChange((event, session) => {
+    if (session && !started) { started = true; startApp(session); }
+    else if (!session && (started || event === 'SIGNED_OUT' || event === 'INITIAL_SESSION')) { started = false; stopApp(); }
+  });
+}
+init();
+</script>
+</body>
+</html>
