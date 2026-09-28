@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f1117">
 <meta name="robots" content="noindex">
 <title>EMS Dashboard</title>
 <style>
@@ -16,38 +17,28 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh;line-height:1.35}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh;line-height:1.35;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 button,input{font-family:inherit}
 [hidden]{display:none!important}
 
 /* ---------- topbar ---------- */
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding:12px 20px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+  padding:12px 20px;background:rgba(26,29,39,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
 .topbar h1{font-size:16px;font-weight:600;white-space:nowrap}
 .topbar h1 em{color:var(--blue);font-style:normal}
-.tr{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);flex-wrap:wrap;justify-content:flex-end}
-.dotx{width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 6px var(--red);transition:all .4s;flex-shrink:0}
-.dotx.on{background:var(--green);box-shadow:0 0 6px var(--green)}
-.linkbtn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer}
+.tr{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.dotx{width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 6px var(--red);transition:background .4s,box-shadow .4s;flex-shrink:0}
+.dotx.on{background:var(--green);box-shadow:0 0 8px var(--green)}
+.linkbtn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer;transition:color .2s,border-color .2s}
 .linkbtn:hover{color:var(--text);border-color:var(--blue)}
 .alert{padding:10px 20px;font-size:13px;font-weight:600;text-align:center;border-bottom:1px solid transparent}
+.alert:not([hidden]){animation:slideDown .28s cubic-bezier(.2,.8,.2,1)}
 .alert.err{background:#2d1010;color:var(--red);border-color:#ef444440}
 .alert.warn{background:#2d2200;color:var(--yellow);border-color:#facc1540}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 
-/* ---------- login ---------- */
-.login-wrap{min-height:calc(100vh - 50px);display:flex;align-items:center;justify-content:center;padding:20px}
-.login{width:100%;max-width:360px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px}
-.login h2{font-size:18px;margin-bottom:4px}
-.login p{font-size:12px;color:var(--muted);margin-bottom:16px}
-.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
-.field label{font-size:11px;color:var(--muted);font-weight:600}
-.field input{background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 12px;font-size:14px;outline:none}
-.field input:focus{border-color:var(--blue)}
-.btn{padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .2s}
-.btn-main{width:100%;background:#0e2233;color:var(--blue);border-color:#38bdf840}
-.btn-main:hover{background:#12304a}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.err-msg{font-size:12px;color:var(--red);min-height:16px;margin-top:10px}
 .setup-note{max-width:560px;margin:40px auto;padding:20px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);font-size:13px;line-height:1.6}
 .setup-note code{background:var(--bg3);padding:1px 6px;border-radius:5px}
 
@@ -57,21 +48,25 @@ button,input{font-family:inherit}
 .sec{font-size:11px;font-weight:600;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin:22px 0 10px}
 .sec:first-child{margin-top:4px}
 .state-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.badge{padding:5px 14px;border-radius:99px;font-size:12px;font-weight:600;letter-spacing:.5px;border:1px solid transparent;transition:all .3s}
+.badge{padding:5px 14px;border-radius:99px;font-size:12px;font-weight:600;letter-spacing:.5px;border:1px solid transparent;transition:background .35s,color .35s,border-color .35s}
 .b-ok{background:#16301e;color:var(--green);border-color:#22c55e40}
 .b-warn{background:#2d2200;color:var(--yellow);border-color:#facc1540}
 .b-err{background:#2d1010;color:var(--red);border-color:#ef444440}
 .b-inf{background:#0e2233;color:var(--blue);border-color:#38bdf840}
 .chip{padding:4px 11px;border-radius:99px;font-size:11px;font-weight:600;background:var(--bg3);color:var(--muted);border:1px solid var(--border)}
-.upd{font-size:11px;color:var(--muted)}
+.upd{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;transition:opacity .3s}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px}
+.card{--c:var(--blue);background:linear-gradient(180deg,color-mix(in srgb,var(--c) 7%,var(--card)),var(--card) 70%);
+  border:1px solid var(--border);border-radius:var(--r);padding:15px;transition:border-color .3s}
+.card:hover{border-color:color-mix(in srgb,var(--c) 45%,var(--border))}
+.cpv{--c:var(--yellow)}.cld{--c:var(--blue)}.cbt{--c:var(--green)}.ch2{--c:var(--purple)}
 .clb{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.cval{font-size:26px;font-weight:700;line-height:1;margin-bottom:6px;font-variant-numeric:tabular-nums}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:var(--c);box-shadow:0 0 6px var(--c)}
+.cval{font-size:26px;font-weight:700;line-height:1;margin-bottom:6px;font-variant-numeric:tabular-nums;color:var(--c)}
 .csub{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 .csub b{color:var(--text);font-weight:500}
-.cpv .cval{color:var(--yellow)}.cld .cval{color:var(--blue)}.cbt .cval{color:var(--green)}.ch2 .cval{color:var(--purple)}
+
 .cw{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px;margin-bottom:12px;transition:opacity .3s}
 .ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px}
 .ct{font-size:13px;font-weight:600}
@@ -81,28 +76,30 @@ button,input{font-family:inherit}
 .chart{position:relative;width:100%}
 .chart canvas{display:block;width:100%;height:100%;touch-action:pan-y}
 .range{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.range button{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer}
+.range button{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;transition:color .2s,border-color .2s,background .2s}
 .range button.on{color:var(--blue);border-color:#38bdf860;background:#0e2233}
 .hist-msg{font-size:11px;color:var(--yellow);min-height:14px;margin-top:6px}
+
 .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px}
 .info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
 .info-box{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:11px}
 .il{font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
 .iv{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
-.note{margin-top:12px;font-size:11px;color:var(--muted);line-height:1.6;background:var(--bg3);border-radius:8px;padding:10px 12px;border-left:3px solid var(--teal)}
 
 /* servo */
 .servo{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 .servo-vals{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;flex:1;min-width:200px}
 .servo-vals .v{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
 .bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:4px}
-.bar>div{height:100%;width:0;background:var(--purple);border-radius:3px;transition:width .3s}
+.bar>div{height:100%;width:0;background:var(--purple);border-radius:3px}
+
+/* toggle */
+.tg{width:44px;height:24px;background:var(--border);border-radius:12px;position:relative;transition:background .3s;flex-shrink:0}
+.tg::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .3s cubic-bezier(.3,.9,.3,1.1)}
+.tg.on{background:var(--orange)}
+.tg.on::after{transform:translateX(20px)}
 
 /* polaritas */
-.tg{width:44px;height:24px;background:var(--border);border-radius:12px;position:relative;transition:background .3s;flex-shrink:0}
-.tg::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .3s}
-.tg.on{background:var(--purple)}
-.tg.on::after{transform:translateX(20px)}
 .pol-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .pol-now{font-size:20px;font-weight:700}
 .pol-msg{font-size:11px;color:var(--yellow);min-height:15px;margin-top:2px}
@@ -114,21 +111,19 @@ button,input{font-family:inherit}
 .pol-tog span small{display:block;font-size:9px;font-weight:500;letter-spacing:.5px}
 .pol-tog.p1 .pt-l{color:var(--text)}
 .pol-tog.p2 .pt-r{color:var(--text)}
+.pol-tog .tg.on{background:var(--purple)}
 .progress{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:14px;opacity:0;transition:opacity .3s}
 .progress.run{opacity:1}
 .progress>div{height:100%;width:0;background:var(--yellow)}
 .progress.run>div{animation:fill 3.3s linear forwards}
 @keyframes fill{from{width:0}to{width:100%}}
 
-/* simulasi (hanya tampilan) */
+/* simulasi */
 .tw{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;background:var(--card);
-  border:1px solid var(--border);border-radius:var(--r);user-select:none}
+  border:1px solid var(--border);border-radius:var(--r);cursor:pointer;user-select:none}
 .tw span.t{font-size:13px;font-weight:600}
-.tw .tg.on{background:var(--orange)}
-.sbadge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:10px;font-weight:600;background:#2d1b00;color:var(--orange);border:1px solid #fb923c35;margin-left:6px}
 .tw-note{margin-top:8px;font-size:11px;color:var(--muted);line-height:1.6}
-
-.tw{cursor:pointer}
+.sbadge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:10px;font-weight:600;background:#2d1b00;color:var(--orange);border:1px solid #fb923c35;margin-left:6px}
 .sbadge.real{background:#16301e;color:var(--green);border-color:#22c55e40}
 .sbadge.sim{background:#0e2233;color:var(--blue);border-color:#38bdf840}
 .simp{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px;margin-top:10px}
@@ -136,7 +131,7 @@ button,input{font-family:inherit}
 .sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
 .srow{display:flex;flex-direction:column;gap:5px}
 .srow label{font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
-.srow label span{color:var(--text);font-weight:600}
+.srow label span{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
 input[type=range]{width:100%;accent-color:var(--orange);cursor:pointer}
 input[type=checkbox]{accent-color:var(--orange);width:15px;height:15px;cursor:pointer}
 .schk{display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer}
@@ -144,21 +139,14 @@ input[type=checkbox]{accent-color:var(--orange);width:15px;height:15px;cursor:po
 .sim-sep>span{font-size:11px;color:var(--muted)}
 .okbox{font-size:11px;color:var(--green);background:#16301e;border:1px solid #22c55e20;border-radius:8px;padding:8px 10px}
 
-/* mqtt */
-.mqr{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
-.mqr input[type=text]{background:var(--bg2);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:7px 10px;font-size:12px;flex:1;min-width:140px}
-.btn{padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .2s}
-.bp{background:#1e1535;color:var(--purple);border-color:#a78bfa35}
-.br{background:#1e1010;color:var(--red);border-color:#ef444435}
-.mqs{font-size:11px;color:var(--muted)}
-.mqs.ok{color:var(--green)}
-
 @media(max-width:580px){
   .topbar{padding:10px 14px}
   .main{padding:12px 14px 32px}
   .cval{font-size:22px}
   .alert{padding:9px 14px}
-  #userLbl{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
 }
 </style>
 </head>
@@ -191,22 +179,22 @@ input[type=checkbox]{accent-color:var(--orange);width:15px;height:15px;cursor:po
   <div class="sec">Data Sensor Real-Time</div>
   <div class="cards">
     <div class="card cpv">
-      <div class="clb"><div class="dot" style="background:var(--yellow)"></div>Solar PV</div>
+      <div class="clb"><div class="dot"></div>Solar PV</div>
       <div class="cval" id="pvW">— W</div>
       <div class="csub"><b id="pvV">—</b> V &nbsp;|&nbsp; <b id="pvA">—</b> A</div>
     </div>
     <div class="card cld">
-      <div class="clb"><div class="dot" style="background:var(--blue)"></div>Output HHO / Beban</div>
+      <div class="clb"><div class="dot"></div>Output HHO / Beban</div>
       <div class="cval" id="ldW">— W</div>
       <div class="csub"><b id="ldV">—</b> V &nbsp;|&nbsp; <b id="ldA">—</b> A</div>
     </div>
     <div class="card cbt">
-      <div class="clb"><div class="dot" style="background:var(--green)"></div>Baterai</div>
+      <div class="clb"><div class="dot"></div>Baterai</div>
       <div class="cval" id="btW">— W</div>
       <div class="csub"><b id="btV">—</b> V &nbsp;|&nbsp; <b id="btA">—</b> A</div>
     </div>
     <div class="card ch2">
-      <div class="clb"><div class="dot" style="background:var(--purple)"></div>Target EMS H₂</div>
+      <div class="clb"><div class="dot"></div>Target EMS H₂</div>
       <div class="cval" id="h2W">— A</div>
       <div class="csub">Raw: <b id="h2T">—</b> A &nbsp;|&nbsp; Surplus: <b id="surpC">—</b> W</div>
     </div>
@@ -294,8 +282,8 @@ input[type=checkbox]{accent-color:var(--orange);width:15px;height:15px;cursor:po
       </div>
     </div>
     <div class="progress" id="polProg"><div></div></div>
-    <div class="note">Perintah dikirim lewat cloud dan diambil perangkat dalam ±2 detik. Urutan aman di perangkat: output diputus (cut) 3 detik → relay berpindah → output disambung kembali. Ditolak otomatis bila sistem sedang trip atau sensor error, dan perintah kedaluwarsa setelah 30 detik.</div>
   </div>
+
   <div class="sec">Simulasi Digital Twin</div>
   <div class="tw" id="simTw">
     <span class="t">Simulation Mode <span class="sbadge" id="simBadge">OFF</span></span>
@@ -349,17 +337,6 @@ input[type=checkbox]{accent-color:var(--orange);width:15px;height:15px;cursor:po
       </div>
     </div>
   </div>
-
-  <div class="sec">MQTT Publish Opsional</div>
-  <div class="panel">
-    <div class="mqr">
-      <input type="text" id="mBroker" value="wss://broker.hivemq.com:8884/mqtt" placeholder="Broker WSS URL">
-      <input type="text" id="mTopic" value="ems/rivaldy/data" placeholder="Topic" style="max-width:190px">
-      <button class="btn bp" id="mqCon">Connect</button>
-      <button class="btn br" id="mqDis">Disconnect</button>
-    </div>
-    <div class="mqs" id="mqSt">● Tidak terhubung</div>
-  </div>
 </main>
 
 <script src="config.js"></script>
@@ -370,132 +347,351 @@ const CFG = window.EMS_CONFIG || {};
 const DEV = CFG.DEVICE_ID || 'ems-01';
 const CONFIGURED = !!(CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY &&
                       !/YOUR/.test(CFG.SUPABASE_URL + CFG.SUPABASE_ANON_KEY));
-const ONLINE_MS = 12000;   // perangkat dianggap offline bila tidak ada update selama ini
+const ONLINE_MS = 12000;        // perangkat dianggap offline bila tidak ada update selama ini
 const H2MAX = 4.0;
+const MAXLIVE = 480;            // titik live yang disimpan
+const LIVE_WINDOW_MS = 120000;  // lebar jendela grafik Live (2 menit)
 
 const $ = id => document.getElementById(id);
-const setT = (id, v) => { const e = $(id); if (e) e.textContent = v; };
+const setT = (id, v) => { const e = $(id); if (e && e.textContent !== v) e.textContent = v; };
 const num = (v, d = 0) => { const n = parseFloat(v); return Number.isFinite(n) ? n : d; };
-const fx = (v, d) => num(v).toFixed(d);
 const p2 = n => String(n).padStart(2, '0');
-const fmtT  = t => { const d = new Date(t); return p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds()); };
-const fmtDT = t => { const d = new Date(t); return p2(d.getDate()) + '/' + p2(d.getMonth() + 1) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()); };
-let xFmt = fmtT;
+const fmtHMS = t => { const d = new Date(t); return p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds()); };
+const fmtHM  = t => { const d = new Date(t); return p2(d.getHours()) + ':' + p2(d.getMinutes()); };
+const fmtDM  = t => { const d = new Date(t); return p2(d.getDate()) + '/' + p2(d.getMonth() + 1); };
+// toFixed tanpa "-0.00"
+const fixed = (v, dec) => { if (Math.abs(v) < 0.5 * Math.pow(10, -dec)) v = 0; return v.toFixed(dec); };
 
-/* ================= GRAFIK CANVAS ================= */
+/* ================= DATA GRAFIK ================= */
 const T = [], PW = [], LW = [], BW = [], HA = [], HT = [];
 const ALL = [T, PW, LW, BW, HA, HT];
+let sb = null, rangeH = 0, seriesRows = [];     // rangeH 0 = Live (dari stream Realtime)
+let avgIv = 600, lastArrival = 0;                // rata-rata jeda antar sampel (ms)
 
-class LineChart {
+/* ================= MESIN ANIMASI 60 fps =================
+   Data datang tiap ~0,5 dtk; tampilan digambar 60x/dtk dengan interpolasi:
+   - angka & jarum: peredaman eksponensial (konstanta waktu TAU ≈ 110 ms → ~0,3 dtk untuk 95%)
+   - grafik Live: sumbu waktu sungguhan yang bergeser tiap frame + kurva monotone-cubic,
+     digambar sedikit tertinggal (renderDelay) agar selalu ada sampel di kiri & kanan. */
+const REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const TAU = REDUCED ? 1 : 110;
+const anims = [];
+let rafId = 0, lastTs = 0, dirty = true;
+const perf = { fps: 0, avgMs: 0, worstMs: 0, frames: 0, _sum: 0, _worst: 0, _t0: 0 };
+window.__perf = perf;
+
+function bindNum(id, dec, suffix, apply, eps) {
+  const a = { el: $(id), dec, suffix: suffix || '', cur: NaN, tgt: 0, last: null, prev: NaN,
+              eps: eps !== undefined ? eps : 0.5 * Math.pow(10, -dec), apply };
+  anims.push(a);
+  return a;
+}
+function setNum(a, v) { a.tgt = v; if (Number.isNaN(a.cur)) a.cur = v; wake(); }
+function snapAll() { anims.forEach(a => { if (!Number.isNaN(a.cur)) a.cur = a.tgt; }); }
+function markDirty() { dirty = true; wake(); }
+const redraw = markDirty;
+
+function applyServo(deg) {
+  const pct = Math.max(0, Math.min(180, deg)) / 180;
+  $('srvArc').setAttribute('stroke-dashoffset', (100.5 * (1 - pct)).toFixed(2));
+  $('srvNeedle').setAttribute('transform', 'rotate(' + (-90 + pct * 180).toFixed(2) + ' 40 44)');
+  $('srvBar').style.width = (pct * 100).toFixed(1) + '%';
+  setT('srvPct', Math.round(pct * 100) + '%');
+}
+
+const A = {
+  pvW: bindNum('pvW', 1, ' W'), pvV: bindNum('pvV', 1), pvA: bindNum('pvA', 2),
+  ldW: bindNum('ldW', 1, ' W'), ldV: bindNum('ldV', 1), ldA: bindNum('ldA', 2),
+  btW: bindNum('btW', 1, ' W'), btV: bindNum('btV', 1), btA: bindNum('btA', 2),
+  h2W: bindNum('h2W', 2, ' A'), h2T: bindNum('h2T', 2), surpC: bindNum('surpC', 1),
+  iSmooth: bindNum('iSmooth', 2, ' A'), iRaw: bindNum('iRaw', 2, ' A'),
+  iSensor: bindNum('iSensor', 2, ' A'), iSurp: bindNum('iSurp', 1, ' W'),
+  srvTgt: bindNum('srvTgt', 2), srvAct: bindNum('srvAct', 2), srvErr: bindNum('srvErr', 2),
+  srvDeg: bindNum('srvDeg', 0, '', applyServo, 0.01)
+};
+
+function wake() {
+  if (rafId || document.hidden) return;
+  lastTs = 0;
+  rafId = requestAnimationFrame(frame);
+}
+
+function frame(ts) {
+  rafId = 0;
+  const gap = lastTs ? ts - lastTs : 0;
+  const dt = gap ? Math.min(gap, 100) : 16.7;
+  lastTs = ts;
+
+  // statistik performa (window.__perf) — dihitung per detik
+  if (gap) { perf._sum += gap; perf.frames++; if (gap > perf._worst) perf._worst = gap; }
+  if (!perf._t0) perf._t0 = ts;
+  if (ts - perf._t0 >= 1000) {
+    perf.fps = Math.round(perf.frames * 1000 / (ts - perf._t0));
+    perf.avgMs = perf.frames ? +(perf._sum / perf.frames).toFixed(2) : 0;
+    perf.worstMs = +perf._worst.toFixed(1);
+    perf.frames = 0; perf._sum = 0; perf._worst = 0; perf._t0 = ts;
+  }
+
+  // angka / jarum
+  const k = 1 - Math.exp(-dt / TAU);
+  let moving = false;
+  for (const a of anims) {
+    if (Number.isNaN(a.cur)) continue;
+    const d = a.tgt - a.cur;
+    if (d !== 0) {
+      if (Math.abs(d) < a.eps) a.cur = a.tgt; else { a.cur += d * k; moving = true; }
+    }
+    const s = fixed(a.cur, a.dec) + a.suffix;
+    if (s !== a.last) { a.el.textContent = s; a.last = s; }
+    if (a.apply && a.cur !== a.prev) { a.apply(a.cur); a.prev = a.cur; }
+  }
+
+  // grafik
+  const live = rangeH === 0;
+  if (live || dirty) {
+    charts.forEach(c => c.render(dt));
+    dirty = false;
+  }
+
+  const liveScroll = live && T.length > 1 && charts.some(c => c.visible);
+  if (moving || liveScroll || dirty) rafId = requestAnimationFrame(frame);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+  } else {
+    snapAll(); markDirty();               // lompat ke nilai terbaru, tidak mengejar ketertinggalan
+    if (sb) pingViewer();
+  }
+});
+
+/* ---------- grafik canvas ---------- */
+function niceScale(lo, hi) {
+  const raw = (hi - lo) / 4;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const f = raw / mag;
+  const step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * mag;
+  return { step, min: Math.floor(lo / step + 1e-9) * step, max: Math.ceil(hi / step - 1e-9) * step };
+}
+
+const TIME_STEPS = [1, 2, 5, 10, 15, 30].map(s => s * 1e3)
+  .concat([1, 2, 5, 10, 15, 30].map(m => m * 6e4))
+  .concat([1, 2, 3, 6, 12].map(h => h * 36e5), [864e5]);
+const pickTimeStep = target => TIME_STEPS.find(s => s >= target) || TIME_STEPS[TIME_STEPS.length - 1];
+
+// kurva monotone-cubic (Fritsch–Carlson): halus dan tidak overshoot
+function trace(path, xs, ys) {
+  const n = xs.length, tans = new Array(n).fill(0);
+  if (!n) return tans;
+  path.moveTo(xs[0], ys[0]);
+  if (n === 1) return tans;
+  if (n === 2) { path.lineTo(xs[1], ys[1]); tans[0] = tans[1] = (ys[1] - ys[0]) / (xs[1] - xs[0]); return tans; }
+  const dx = [], m = [];
+  for (let i = 0; i < n - 1; i++) { dx[i] = xs[i + 1] - xs[i]; m[i] = (ys[i + 1] - ys[i]) / dx[i]; }
+  tans[0] = m[0]; tans[n - 1] = m[n - 2];
+  for (let i = 1; i < n - 1; i++) tans[i] = (m[i - 1] * m[i] <= 0) ? 0 : (m[i - 1] + m[i]) / 2;
+  for (let i = 0; i < n - 1; i++) {
+    if (m[i] === 0) { tans[i] = 0; tans[i + 1] = 0; continue; }
+    const a = tans[i] / m[i], b = tans[i + 1] / m[i], s = a * a + b * b;
+    if (s > 9) { const t = 3 / Math.sqrt(s); tans[i] = t * a * m[i]; tans[i + 1] = t * b * m[i]; }
+  }
+  for (let i = 0; i < n - 1; i++) {
+    const h = dx[i] / 3;
+    path.bezierCurveTo(xs[i] + h, ys[i] + tans[i] * h, xs[i + 1] - h, ys[i + 1] - tans[i + 1] * h, xs[i + 1], ys[i + 1]);
+  }
+  return tans;
+}
+
+// nilai kurva pada x (Hermite) — untuk titik ujung & tooltip
+function evalCurve(xs, ys, tans, x) {
+  const n = xs.length;
+  if (!n) return null;
+  if (x <= xs[0]) return ys[0];
+  if (x >= xs[n - 1]) return ys[n - 1];
+  let i = 0;
+  while (i < n - 2 && xs[i + 1] < x) i++;
+  const h = xs[i + 1] - xs[i], s = (x - xs[i]) / h, s2 = s * s, s3 = s2 * s;
+  return (2 * s3 - 3 * s2 + 1) * ys[i] + (s3 - 2 * s2 + s) * h * tans[i] +
+         (-2 * s3 + 3 * s2) * ys[i + 1] + (s3 - s2) * h * tans[i + 1];
+}
+
+const renderDelay = () => Math.max(400, Math.min(1500, avgIv * 1.5));
+
+class Chart {
   constructor(canvas, series, o) {
     this.c = canvas; this.g = canvas.getContext('2d');
-    this.series = series; this.o = o; this.hover = -1;
-    const move = e => {
-      const r = canvas.getBoundingClientRect(), n = T.length; if (n < 2) return;
-      const pw = r.width - 46 - 8;
-      const i = Math.round((e.clientX - r.left - 46) / pw * (n - 1));
-      this.hover = Math.max(0, Math.min(n - 1, i)); this.draw();
-    };
-    const leave = () => { this.hover = -1; this.draw(); };
-    canvas.addEventListener('mousemove', move);
-    canvas.addEventListener('mouseleave', leave);
-    canvas.addEventListener('touchstart', e => move(e.touches[0]), { passive: true });
-    canvas.addEventListener('touchmove', e => move(e.touches[0]), { passive: true });
-    canvas.addEventListener('touchend', leave);
-    if (window.ResizeObserver) new ResizeObserver(() => this.draw()).observe(canvas.parentElement);
+    this.series = series; this.o = o;
+    this.hoverX = null; this.visible = true; this.lo = null; this.hi = null;
+    const setHover = e => { this.hoverX = e.clientX - canvas.getBoundingClientRect().left; markDirty(); };
+    canvas.addEventListener('pointermove', setHover);
+    canvas.addEventListener('pointerdown', setHover);
+    canvas.addEventListener('pointerleave', () => { this.hoverX = null; markDirty(); });
+    canvas.addEventListener('pointerup', e => { if (e.pointerType === 'touch') { this.hoverX = null; markDirty(); } });
+    if (window.ResizeObserver) new ResizeObserver(markDirty).observe(canvas.parentElement);
+    if (window.IntersectionObserver) {
+      new IntersectionObserver(es => { this.visible = es[es.length - 1].isIntersecting; if (this.visible) markDirty(); })
+        .observe(canvas);
+    }
   }
-  draw() {
-    const c = this.c, p = c.parentElement, dpr = window.devicePixelRatio || 1;
+
+  render(dt) {
+    if (!this.visible) return;
+    const c = this.c, p = c.parentElement;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const w = p.clientWidth, h = p.clientHeight;
     if (!w || !h) return;
-    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
-      c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
-    }
+    const cw = Math.round(w * dpr), ch = Math.round(h * dpr);
+    if (c.width !== cw || c.height !== ch) { c.width = cw; c.height = ch; }
     const g = this.g;
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, w, h);
-    const L = 46, R = 8, Tp = 8, B = 20, pw = w - L - R, ph = h - Tp - B, n = T.length;
-    g.font = '10px system-ui,sans-serif';
+    g.font = '10px system-ui,-apple-system,Segoe UI,sans-serif';
+
+    const L = 48, R = 10, Tp = 10, B = 22, pw = w - L - R, ph = h - Tp - B, n = T.length;
     if (n < 2) {
       g.fillStyle = '#64748b'; g.textAlign = 'center';
-      g.fillText('Belum ada data', w / 2, h / 2); g.textAlign = 'left';
+      g.fillText('Menunggu data…', w / 2, h / 2); g.textAlign = 'left';
       return;
     }
+
+    // jendela waktu
+    const live = rangeH === 0;
+    let t1, t0;
+    if (live) { t1 = Date.now() - renderDelay(); t0 = t1 - LIVE_WINDOW_MS; }
+    else { t0 = T[0]; t1 = Math.max(T[n - 1], t0 + 1); }
+
+    // indeks yang terlihat (+1 titik di kiri & kanan agar kurva menyambung ke tepi)
+    let i0 = 0, i1 = n - 1;
+    while (i0 < n - 1 && T[i0 + 1] <= t0) i0++;
+    while (i1 > 0 && T[i1 - 1] >= t1) i1--;
+    if (i1 <= i0) i1 = Math.min(n - 1, i0 + 1);
+
+    // skala Y (target "bagus", lalu dihaluskan)
     let lo = Infinity, hi = -Infinity;
-    this.series.forEach(s => s.data.forEach(v => { if (v < lo) lo = v; if (v > hi) hi = v; }));
+    for (const s of this.series) for (let i = i0; i <= i1; i++) { const v = s.data[i]; if (v < lo) lo = v; if (v > hi) hi = v; }
     if (this.o.floor !== undefined) lo = Math.min(lo, this.o.floor);
     if (this.o.minTop !== undefined) hi = Math.max(hi, this.o.minTop);
-    if (hi - lo < 1e-6) hi = lo + 1;
-    const pad = (hi - lo) * 0.06; hi += pad;
-    if (this.o.floor === undefined) lo -= pad;
-    const Y = v => Tp + ph * (1 - (v - lo) / (hi - lo));
-    const X = i => L + pw * i / (n - 1);
+    if (!(hi > lo)) hi = lo + 1;
+    const sc = niceScale(lo, hi);
+    if (this.lo === null || !live || REDUCED) { this.lo = sc.min; this.hi = sc.max; }
+    else { const k = 1 - Math.exp(-dt / 240); this.lo += (sc.min - this.lo) * k; this.hi += (sc.max - this.hi) * k; }
+    const ylo = this.lo, yhi = this.hi;
+    const X = t => L + pw * (t - t0) / (t1 - t0);
+    const Y = v => Tp + ph * (1 - (v - ylo) / (yhi - ylo));
 
-    g.strokeStyle = '#243049'; g.fillStyle = '#64748b'; g.lineWidth = 1; g.textAlign = 'right';
-    for (let k = 0; k <= 4; k++) {
-      const v = lo + (hi - lo) * k / 4, y = Y(v);
-      g.beginPath(); g.moveTo(L, y); g.lineTo(w - R, y); g.stroke();
-      g.fillText(v.toFixed(this.o.dec), L - 6, y + 3);
+    // grid horizontal + label Y
+    const ld = Math.min(3, Math.max(0, -Math.floor(Math.log10(sc.step) + 1e-9)));
+    g.lineWidth = 1; g.textAlign = 'right';
+    for (let v = Math.ceil(ylo / sc.step - 1e-9) * sc.step; v <= yhi + 1e-9; v += sc.step) {
+      const y = Math.round(Y(v)) + 0.5;
+      g.strokeStyle = '#243049'; g.beginPath(); g.moveTo(L, y); g.lineTo(w - R, y); g.stroke();
+      g.fillStyle = '#64748b'; g.fillText(v.toFixed(Math.max(ld, 0)), L - 6, y + 3);
     }
-    [0, Math.floor((n - 1) / 2), n - 1].forEach((i, k) => {
-      g.textAlign = k === 0 ? 'left' : (k === 2 ? 'right' : 'center');
-      g.fillText(xFmt(T[i]), X(i), h - 5);
-    });
-    g.textAlign = 'left';
+    // garis nol
+    if (ylo < 0 && yhi > 0) {
+      g.strokeStyle = '#3b4a68'; g.beginPath(); g.moveTo(L, Math.round(Y(0)) + 0.5); g.lineTo(w - R, Math.round(Y(0)) + 0.5); g.stroke();
+    }
 
-    this.series.forEach(s => {
-      g.beginPath();
-      s.data.forEach((v, i) => { if (i) g.lineTo(X(i), Y(v)); else g.moveTo(X(i), Y(v)); });
-      g.strokeStyle = s.color; g.lineWidth = s.width || 2;
-      g.setLineDash(s.dash || []); g.stroke(); g.setLineDash([]);
-      if (s.fill) {
-        g.lineTo(X(n - 1), Y(lo)); g.lineTo(X(0), Y(lo)); g.closePath();
-        g.fillStyle = s.color + '18'; g.fill();
+    // grid vertikal + label waktu (bergeser mulus bersama data)
+    const span = t1 - t0, stepT = pickTimeStep(span / 5);
+    const off = new Date().getTimezoneOffset() * 60000;
+    g.textAlign = 'center';
+    for (let tt = Math.ceil((t0 - off) / stepT) * stepT + off; tt <= t1; tt += stepT) {
+      const x = X(tt);
+      g.strokeStyle = '#1f2940'; g.beginPath(); g.moveTo(Math.round(x) + 0.5, Tp); g.lineTo(Math.round(x) + 0.5, Tp + ph); g.stroke();
+      if (x > L + 18 && x < w - R - 18) {
+        g.fillStyle = '#64748b';
+        g.fillText(stepT >= 864e5 ? fmtDM(tt) : (stepT >= 6e4 ? fmtHM(tt) : fmtHMS(tt)), x, h - 6);
       }
-    });
+    }
 
-    if (this.hover >= 0 && this.hover < n) {
-      const i = this.hover, x = X(i);
+    // titik layar
+    const xs = [], idx = [];
+    for (let i = i0; i <= i1; i++) {
+      const x = X(T[i]);
+      if (xs.length && x - xs[xs.length - 1] < 0.01) continue;
+      xs.push(x); idx.push(i);
+    }
+
+    g.save();
+    g.beginPath(); g.rect(L, Tp - 3, pw, ph + 6); g.clip();
+    const yz = Math.max(Tp, Math.min(Tp + ph, Y(0)));
+    for (const s of this.series) {
+      const ys = idx.map(i => Y(s.data[i]));
+      const path = new Path2D();
+      const tans = trace(path, xs, ys);
+      if (s.fill && xs.length > 1) {
+        const fp = new Path2D(path);
+        fp.lineTo(xs[xs.length - 1], yz); fp.lineTo(xs[0], yz); fp.closePath();
+        const gr = g.createLinearGradient(0, Tp, 0, Tp + ph);
+        gr.addColorStop(0, s.color + '3a'); gr.addColorStop(1, s.color + '00');
+        g.fillStyle = gr; g.fill(fp);
+      }
+      g.lineJoin = 'round'; g.lineCap = 'round';
+      g.strokeStyle = s.color; g.lineWidth = s.width || 2;
+      g.setLineDash(s.dash || []); g.stroke(path); g.setLineDash([]);
+      s._ys = ys; s._tans = tans;
+    }
+    g.restore();
+
+    // titik ujung (nilai terbaru) saat Live
+    if (live && xs.length > 1) {
+      const xe = Math.min(xs[xs.length - 1], L + pw);
+      for (const s of this.series) {
+        const y = evalCurve(xs, s._ys, s._tans, xe);
+        if (y === null) continue;
+        g.fillStyle = s.color + '40'; g.beginPath(); g.arc(xe, y, 5, 0, 6.2832); g.fill();
+        g.fillStyle = s.color; g.beginPath(); g.arc(xe, y, 2.6, 0, 6.2832); g.fill();
+      }
+    }
+
+    // crosshair + tooltip mengikuti kursor / sentuhan
+    const hx = this.hoverX;
+    if (hx !== null && hx >= L && hx <= L + pw && xs.length > 1) {
       g.strokeStyle = '#475569'; g.lineWidth = 1;
-      g.beginPath(); g.moveTo(x, Tp); g.lineTo(x, Tp + ph); g.stroke();
-      this.series.forEach(s => { g.beginPath(); g.arc(x, Y(s.data[i]), 3, 0, 6.283); g.fillStyle = s.color; g.fill(); });
-      const lines = [xFmt(T[i])].concat(this.series.map(s => s.name + ': ' + s.data[i].toFixed(this.o.dec) + ' ' + this.o.unit));
-      g.font = '11px system-ui,sans-serif';
-      const tw = Math.max(...lines.map(t => g.measureText(t).width)) + 16, th = lines.length * 15 + 8;
-      let bx = x + 10; if (bx + tw > w - 4) bx = x - 10 - tw;
+      g.beginPath(); g.moveTo(hx, Tp); g.lineTo(hx, Tp + ph); g.stroke();
+      const th = t0 + (hx - L) / pw * (t1 - t0);
+      const lines = [(span > 216e5 ? fmtDM(th) + ' ' + fmtHM(th) : fmtHMS(th))];
+      const cols = ['#94a3b8'];
+      for (const s of this.series) {
+        const y = evalCurve(xs, s._ys, s._tans, hx);
+        if (y === null) continue;
+        g.fillStyle = s.color; g.beginPath(); g.arc(hx, y, 3.5, 0, 6.2832); g.fill();
+        const v = ylo + (yhi - ylo) * (1 - (y - Tp) / ph);
+        lines.push(s.name + ': ' + v.toFixed(this.o.dec) + ' ' + this.o.unit); cols.push(s.color);
+      }
+      g.font = '11px system-ui,-apple-system,Segoe UI,sans-serif'; g.textAlign = 'left';
+      const tw = Math.max(...lines.map(t => g.measureText(t).width)) + 16, thh = lines.length * 15 + 8;
+      let bx = hx + 12; if (bx + tw > w - 4) bx = hx - 12 - tw;
       g.fillStyle = '#1e2235'; g.strokeStyle = '#2e3350';
-      g.fillRect(bx, Tp + 4, tw, th); g.strokeRect(bx, Tp + 4, tw, th);
-      lines.forEach((t, k) => {
-        g.fillStyle = k ? this.series[k - 1].color : '#94a3b8';
-        g.fillText(t, bx + 8, Tp + 4 + 15 + k * 15 - 3);
-      });
+      g.beginPath(); g.roundRect ? g.roundRect(bx, Tp + 4, tw, thh, 6) : g.rect(bx, Tp + 4, tw, thh);
+      g.fill(); g.stroke();
+      lines.forEach((t, k) => { g.fillStyle = cols[k]; g.fillText(t, bx + 8, Tp + 4 + 15 + k * 15 - 3); });
     }
   }
 }
 
-const cPwr = new LineChart($('cPwr'), [
+const cPwr = new Chart($('cPwr'), [
   { name: 'PV',        data: PW, color: '#facc15', fill: true },
   { name: 'HHO/Beban', data: LW, color: '#38bdf8', fill: true },
   { name: 'Baterai',   data: BW, color: '#22c55e', fill: true }
-], { dec: 0, unit: 'W' });
-const cH2 = new LineChart($('cH2'), [
+], { dec: 1, unit: 'W' });
+const cH2 = new Chart($('cH2'), [
   { name: 'Sensor', data: HA, color: '#a78bfa', fill: true },
   { name: 'Target', data: HT, color: '#2dd4bf', dash: [5, 4], width: 1.6 }
 ], { dec: 2, unit: 'A', floor: 0, minTop: H2MAX + 0.5 });
-const redraw = () => { cPwr.draw(); cH2.draw(); };
+const charts = [cPwr, cH2];
 
-/* ================= STATE ================= */
-let sb = null, rangeH = 0, seriesRows = [];   // rangeH 0 = Live (dari stream Realtime)
-const MAXLIVE = 240;                           // 240 titik x ~0,5 dtk = ~2 menit
+/* ================= STATUS / KARTU ================= */
 let lastUpdatedAt = null, lastSeen = 0, firstState = true, curData = null;
-let histTimer = null, pollTimer = null, ageTimer = null, viewTimer = null;
+let histTimer = null, pollTimer = null, ageTimer = null, viewTimer = null, simTimer = null;
 
 // Beri tahu server bahwa ada yang menonton -> ESP32 beralih ke mode cepat (0,5 dtk)
 function pingViewer() {
   if (document.visibilityState !== 'visible') return;
   sb.rpc('viewer_ping', { p_device: DEV }).then(() => {}, () => {});
 }
-document.addEventListener('visibilitychange', () => { if (sb && document.visibilityState === 'visible') pingViewer(); });
 
 const isOnline = () => lastSeen > 0 && Date.now() - lastSeen < ONLINE_MS;
 
@@ -514,37 +710,36 @@ const ALERTS = {
 function showAlert(text, cls) {
   const a = $('alert');
   if (!text) { a.hidden = true; return; }
+  if (a.hidden || a.textContent !== text) { a.hidden = true; void a.offsetWidth; }   // ulangi animasi masuk
   a.className = 'alert ' + cls; a.textContent = text; a.hidden = false;
 }
 
 function updCards(d) {
-  setT('pvW', fx(d.pv.w, 1) + ' W'); setT('pvV', fx(d.pv.v, 1)); setT('pvA', fx(d.pv.a, 2));
-  setT('ldW', fx(d.ld.w, 1) + ' W'); setT('ldV', fx(d.ld.v, 1)); setT('ldA', fx(d.ld.a, 2));
-  setT('btW', fx(d.bt.w, 1) + ' W'); setT('btV', fx(d.bt.v, 1)); setT('btA', fx(d.bt.a, 2));
-  const smooth = num(d.h2a), raw = num(d.h2t), surp = num(d.surp);
-  setT('h2W', smooth.toFixed(2) + ' A'); setT('h2T', raw.toFixed(2)); setT('surpC', surp.toFixed(1));
-  setT('iSmooth', smooth.toFixed(2) + ' A'); setT('iRaw', raw.toFixed(2) + ' A');
-  setT('iSensor', num(d.ld.a).toFixed(2) + ' A'); setT('iSurp', surp.toFixed(1) + ' W');
+  const smooth = num(d.h2a), raw = num(d.h2t), sensor = num(d.ld.a), surp = num(d.surp);
+  setNum(A.pvW, num(d.pv.w)); setNum(A.pvV, num(d.pv.v)); setNum(A.pvA, num(d.pv.a));
+  setNum(A.ldW, num(d.ld.w)); setNum(A.ldV, num(d.ld.v)); setNum(A.ldA, sensor);
+  setNum(A.btW, num(d.bt.w)); setNum(A.btV, num(d.bt.v)); setNum(A.btA, num(d.bt.a));
+  setNum(A.h2W, smooth); setNum(A.h2T, raw); setNum(A.surpC, surp);
+  setNum(A.iSmooth, smooth); setNum(A.iRaw, raw); setNum(A.iSensor, sensor); setNum(A.iSurp, surp);
+  setNum(A.srvTgt, smooth); setNum(A.srvAct, sensor); setNum(A.srvErr, Math.abs(smooth - sensor));
+  setNum(A.srvDeg, Math.max(0, Math.min(180, num(d.srv))));
 
   const s = String(d.state || '');
   const b = $('stBadge');
-  b.textContent = s || '—';
-  b.className = 'badge ' + (BADGE[s] || 'b-inf');
+  if (b.textContent !== (s || '—')) b.textContent = s || '—';
+  const cls = 'badge ' + (BADGE[s] || 'b-inf');
+  if (b.className !== cls) b.className = cls;
   if (ALERTS[s]) showAlert(ALERTS[s], 'err'); else if (isOnline()) showAlert('', '');
-
-  const deg = Math.max(0, Math.min(180, Math.round(num(d.srv)))), pct = deg / 180;
-  $('srvArc').setAttribute('stroke-dashoffset', (100.5 * (1 - pct)).toFixed(1));
-  $('srvNeedle').setAttribute('transform', 'rotate(' + (-90 + deg) + ' 40 44)');
-  setT('srvDeg', deg); setT('srvTgt', smooth.toFixed(2)); setT('srvAct', fx(d.ld.a, 2)); setT('srvErr', Math.abs(smooth - num(d.ld.a)).toFixed(2));
-  $('srvBar').style.width = Math.round(pct * 100) + '%';
-  setT('srvPct', Math.round(pct * 100) + '%');
 }
 
 function pushLive(d) {
-  T.push(Date.now()); PW.push(num(d.pv.w)); LW.push(num(d.ld.w)); BW.push(num(d.bt.w));
+  const now = Date.now();
+  if (lastArrival) avgIv += (Math.min(now - lastArrival, 3000) - avgIv) * 0.2;
+  lastArrival = now;
+  T.push(now); PW.push(num(d.pv.w)); LW.push(num(d.ld.w)); BW.push(num(d.bt.w));
   HA.push(num(d.ld.a)); HT.push(num(d.h2a));
   while (T.length > MAXLIVE) ALL.forEach(a => a.shift());
-  redraw();
+  wake();
 }
 
 function onState(row) {
@@ -558,10 +753,9 @@ function onState(row) {
   const isNew = firstState || row.updated_at !== prevStamp;
   firstState = false;
   curData = row.data;
-  setT('updLbl', 'Update ' + fmtT(Date.parse(row.updated_at)) +
+  setT('updLbl', 'Update ' + fmtHMS(Date.parse(row.updated_at)) +
        (row.data.rtt ? ' · latensi ' + row.data.rtt + ' ms' : ''));
   if (isNew && rangeH === 0) pushLive(row.data);
-  if (isNew && mqC && mqC.connected) mqC.publish($('mTopic').value, JSON.stringify(row.data), { qos: 0 });
   updCards(curData);
   updatePolarity(curData);
   syncSim(curData);
@@ -659,14 +853,15 @@ async function loadHistory() {
   if (rangeH === 0) return;   // mode Live: titik datang dari stream, bukan dari histori
   const { data, error } = await sb.rpc('telemetry_series', { p_device: DEV, p_hours: rangeH });
   if (error) { setT('histMsg', 'Gagal memuat histori: ' + error.message); return; }
+  if (rangeH === 0) return;   // pengguna pindah ke Live selama menunggu
   seriesRows = data || [];
   ALL.forEach(a => a.length = 0);
   seriesRows.forEach(r => {
     T.push(Date.parse(r.t)); PW.push(num(r.pv_w)); LW.push(num(r.ld_w)); BW.push(num(r.bt_w));
     HA.push(num(r.ld_a)); HT.push(num(r.h2t));
   });
-  xFmt = rangeH >= 24 ? fmtDT : fmtT;
   setT('histMsg', seriesRows.length ? '' : 'Belum ada data histori pada rentang ini');
+  charts.forEach(c => { c.lo = null; });
   redraw();
 }
 
@@ -687,41 +882,20 @@ $('rangeBtns').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   rangeH = parseInt(b.dataset.h, 10);
   [...$('rangeBtns').children].forEach(x => x.classList.toggle('on', x === b));
+  charts.forEach(c => { c.lo = null; });
   if (rangeH === 0) {
-    ALL.forEach(a => a.length = 0); seriesRows = []; xFmt = fmtT; redraw();
+    ALL.forEach(a => a.length = 0); seriesRows = [];
     setT('histMsg', 'Mode Live: grafik terisi dari data yang masuk sejak halaman dibuka');
     if (curData && curData.pv) pushLive(curData);
+    redraw();
   } else {
     setT('histMsg', '');
     loadHistory();
   }
 });
 
-/* ================= APP LIFECYCLE ================= */
-function startApp() {
-  $('main').hidden = false;
-  firstState = true; lastSeen = 0; lastUpdatedAt = null;
-
-  fetchState(); loadHistory(); loadSimSettings();
-  clearInterval(simTimer);
-  simTimer = setInterval(() => { if (simOn) sendSim(); }, 60000);   // detak agar tidak kedaluwarsa 5 menit
-  setT('histMsg', 'Mode Live: grafik terisi dari data yang masuk sejak halaman dibuka');
-  pingViewer();
-  viewTimer = setInterval(pingViewer, 10000);
-  sb.channel('ems-' + DEV)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'device_state', filter: 'device_id=eq.' + DEV }, p => onState(p.new))
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'commands', filter: 'device_id=eq.' + DEV }, p => onCommand(p.new))
-    .subscribe();
-
-  clearInterval(pollTimer); clearInterval(histTimer); clearInterval(ageTimer);
-  pollTimer = setInterval(fetchState, 5000);        // cadangan bila Realtime terputus
-  histTimer = setInterval(loadHistory, 30000);
-  ageTimer  = setInterval(refreshOnline, 1000);
-  window.addEventListener('resize', redraw);
-}
-
 /* ================= SIMULASI (kendali jarak jauh lewat set_sim) ================= */
-let simOn = false, partOn = false, simT = null, simSynced = false, lastSimAction = 0, simTimer = null;
+let simOn = false, partOn = false, simT = null, simSynced = false, lastSimAction = 0;
 
 function applySimUI() {
   $('simTg').classList.toggle('on', simOn);
@@ -787,40 +961,27 @@ $('partTw').addEventListener('click', togglePartial);
 Object.keys(SIM_UNIT).forEach(id => $(id).addEventListener('input', slu));
 $('h2Full').addEventListener('change', schSim);
 
-/* ================= MQTT (library dimuat saat dibutuhkan) ================= */
-let mqC = null;
-function loadMqttLib() {
-  return new Promise((res, rej) => {
-    if (window.mqtt) return res();
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.0.5/mqtt.min.js';
-    s.onload = res;
-    s.onerror = () => rej(new Error('library MQTT gagal dimuat (perlu internet)'));
-    document.head.appendChild(s);
-  });
+/* ================= SIKLUS APLIKASI ================= */
+function startApp() {
+  $('main').hidden = false;
+  firstState = true; lastSeen = 0; lastUpdatedAt = null;
+  setT('histMsg', 'Mode Live: grafik terisi dari data yang masuk sejak halaman dibuka');
+
+  fetchState(); loadHistory(); loadSimSettings();
+  pingViewer();
+  sb.channel('ems-' + DEV)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'device_state', filter: 'device_id=eq.' + DEV }, p => onState(p.new))
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'commands', filter: 'device_id=eq.' + DEV }, p => onCommand(p.new))
+    .subscribe();
+
+  clearInterval(pollTimer); clearInterval(histTimer); clearInterval(ageTimer); clearInterval(viewTimer); clearInterval(simTimer);
+  pollTimer = setInterval(fetchState, 5000);        // cadangan bila Realtime terputus
+  histTimer = setInterval(loadHistory, 30000);
+  ageTimer  = setInterval(refreshOnline, 1000);
+  viewTimer = setInterval(pingViewer, 10000);
+  simTimer  = setInterval(() => { if (simOn) sendSim(); }, 60000);   // detak agar simulasi tidak kedaluwarsa 5 menit
+  markDirty();
 }
-function mqSt(cls, txt) { const e = $('mqSt'); e.className = 'mqs ' + cls; e.textContent = txt; }
-async function mqttCon() {
-  if (mqC) { mqC.end(true); mqC = null; }
-  mqSt('', '● Menghubungkan…');
-  try { await loadMqttLib(); } catch (e) { mqSt('', '● ' + e.message); return; }
-  const broker = $('mBroker').value.trim();
-  try {
-    mqC = mqtt.connect(broker, {
-      clientId: 'ems_' + Math.random().toString(16).slice(2, 10),
-      clean: true, connectTimeout: 6000, reconnectPeriod: 5000, protocolVersion: 5
-    });
-  } catch (e) { mqSt('', '● Error: ' + e.message); return; }
-  mqC.on('connect', () => mqSt('ok', '● Terhubung ke ' + broker));
-  mqC.on('error', e => mqSt('', '● Error: ' + e.message));
-  mqC.on('close', () => mqSt('', '● Terputus'));
-}
-function mqttDis() {
-  if (mqC) { mqC.end(true); mqC = null; }
-  mqSt('', '● Tidak terhubung');
-}
-$('mqCon').addEventListener('click', mqttCon);
-$('mqDis').addEventListener('click', mqttDis);
 
 function init() {
   simLabels();
