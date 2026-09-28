@@ -91,20 +91,11 @@ drop trigger if exists commands_touch on public.commands;
 create trigger commands_touch before update on public.commands
   for each row execute function public.touch_updated_at();
 
--- Jeda minimal 10 detik antar perintah (cegah spam relay)
-create or replace function public.commands_cooldown() returns trigger
-language plpgsql as $$
-begin
-  if exists (select 1 from public.commands c
-              where c.device_id = new.device_id
-                and c.created_at > now() - interval '10 seconds') then
-    raise exception 'terlalu cepat, tunggu beberapa detik' using errcode = 'P0001';
-  end if;
-  return new;
-end $$;
+-- Jeda antar perintah di level database DINONAKTIFKAN (lihat DROP di bawah).
+-- Proteksi relay tetap ada di firmware: POLARITY_MIN_GAP_MS (30 dtk) di src/main.cpp
+-- menolak pergantian polaritas fisik yang terlalu cepat walau perintah diterima di sini.
 drop trigger if exists commands_cooldown_trg on public.commands;
-create trigger commands_cooldown_trg before insert on public.commands
-  for each row execute function public.commands_cooldown();
+drop function if exists public.commands_cooldown();
 
 alter table public.commands enable row level security;
 drop policy if exists cmd_read   on public.commands;
