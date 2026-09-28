@@ -120,6 +120,23 @@ button,input{font-family:inherit}
 .progress.run>div{animation:fill 3.3s linear forwards}
 @keyframes fill{from{width:0}to{width:100%}}
 
+/* simulasi (hanya tampilan) */
+.tw{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;background:var(--card);
+  border:1px solid var(--border);border-radius:var(--r);user-select:none}
+.tw span.t{font-size:13px;font-weight:600}
+.tw .tg.on{background:var(--orange)}
+.sbadge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:10px;font-weight:600;background:#2d1b00;color:var(--orange);border:1px solid #fb923c35;margin-left:6px}
+.tw-note{margin-top:8px;font-size:11px;color:var(--muted);line-height:1.6}
+
+/* mqtt */
+.mqr{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.mqr input[type=text]{background:var(--bg2);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:7px 10px;font-size:12px;flex:1;min-width:140px}
+.btn{padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .2s}
+.bp{background:#1e1535;color:var(--purple);border-color:#a78bfa35}
+.br{background:#1e1010;color:var(--red);border-color:#ef444435}
+.mqs{font-size:11px;color:var(--muted)}
+.mqs.ok{color:var(--green)}
+
 @media(max-width:580px){
   .topbar{padding:10px 14px}
   .main{padding:12px 14px 32px}
@@ -155,7 +172,7 @@ button,input{font-family:inherit}
     <span class="upd" id="updLbl">Menunggu data…</span>
   </div>
 
-  <div class="sec">Data Sensor</div>
+  <div class="sec">Data Sensor Real-Time</div>
   <div class="cards">
     <div class="card cpv">
       <div class="clb"><div class="dot" style="background:var(--yellow)"></div>Solar PV</div>
@@ -192,7 +209,7 @@ button,input{font-family:inherit}
       <button class="linkbtn" id="csvBtn">Unduh CSV</button>
     </div>
     <div class="ch">
-      <span class="ct">Daya Sistem (W)</span>
+      <span class="ct">Daya Sistem</span>
       <div class="cl">
         <div class="li"><div class="ld" style="background:#facc15"></div>PV</div>
         <div class="li"><div class="ld" style="background:#38bdf8"></div>HHO/Beban</div>
@@ -205,13 +222,23 @@ button,input{font-family:inherit}
 
   <div class="cw">
     <div class="ch">
-      <span class="ct">Arus HHO Sensor vs Target EMS (A)</span>
+      <span class="ct">Arus HHO Sensor vs Target EMS</span>
       <div class="cl">
-        <div class="li"><div class="ld" style="background:#a78bfa"></div>Sensor</div>
-        <div class="li"><div class="ld" style="background:#2dd4bf"></div>Target</div>
+        <div class="li"><div class="ld" style="background:#a78bfa"></div>Sensor 0x40</div>
+        <div class="li"><div class="ld" style="background:#2dd4bf"></div>Target EMS</div>
       </div>
     </div>
     <div class="chart" style="height:160px"><canvas id="cH2"></canvas></div>
+  </div>
+
+  <div class="sec">Status Target H₂</div>
+  <div class="panel">
+    <div class="info-grid">
+      <div class="info-box"><div class="il">Target Smooth</div><div class="iv" id="iSmooth" style="color:var(--purple)">0.00 A</div></div>
+      <div class="info-box"><div class="il">Target Raw EMS</div><div class="iv" id="iRaw" style="color:var(--teal)">0.00 A</div></div>
+      <div class="info-box"><div class="il">Arus Sensor HHO</div><div class="iv" id="iSensor" style="color:var(--blue)">0.00 A</div></div>
+      <div class="info-box"><div class="il">Surplus PV</div><div class="iv" id="iSurp" style="color:var(--yellow)">0.0 W</div></div>
+    </div>
   </div>
 
   <div class="sec">Servo HHO</div>
@@ -227,7 +254,7 @@ button,input{font-family:inherit}
         <div><div class="il">Posisi</div><div class="v"><span id="srvDeg">0</span>°</div></div>
         <div><div class="il">Target H₂</div><div class="v"><span id="srvTgt">0.00</span> A</div></div>
         <div><div class="il">Arus HHO (INA219)</div><div class="v"><span id="srvAct">0.00</span> A</div></div>
-        <div><div class="il">Surplus PV</div><div class="v" style="color:var(--yellow)"><span id="srvSurp">0.0</span> W</div></div>
+        <div><div class="il">Selisih</div><div class="v" style="color:var(--yellow)"><span id="srvErr">0.00</span> A</div></div>
       </div>
     </div>
     <div style="display:flex;justify-content:space-between;margin-top:12px">
@@ -252,6 +279,23 @@ button,input{font-family:inherit}
     </div>
     <div class="progress" id="polProg"><div></div></div>
     <div class="note">Perintah dikirim lewat cloud dan diambil perangkat dalam ±2 detik. Urutan aman di perangkat: output diputus (cut) 3 detik → relay berpindah → output disambung kembali. Ditolak otomatis bila sistem sedang trip atau sensor error, dan perintah kedaluwarsa setelah 30 detik.</div>
+  </div>
+  <div class="sec">Simulasi Digital Twin</div>
+  <div class="tw" title="Mode simulasi hanya bisa diubah dari dashboard lokal ESP32">
+    <span class="t">Simulation Mode <span class="sbadge" id="simBadge">OFF</span></span>
+    <div class="tg" id="simTg"></div>
+  </div>
+  <div class="tw-note">Hanya tampilan status. Mode simulasi mengganti pembacaan sensor asli, jadi tidak bisa diubah dari jarak jauh. Ubah lewat dashboard lokal ESP32 (IP di LCD).</div>
+
+  <div class="sec">MQTT Publish Opsional</div>
+  <div class="panel">
+    <div class="mqr">
+      <input type="text" id="mBroker" value="wss://broker.hivemq.com:8884/mqtt" placeholder="Broker WSS URL">
+      <input type="text" id="mTopic" value="ems/rivaldy/data" placeholder="Topic" style="max-width:190px">
+      <button class="btn bp" id="mqCon">Connect</button>
+      <button class="btn br" id="mqDis">Disconnect</button>
+    </div>
+    <div class="mqs" id="mqSt">● Tidak terhubung</div>
   </div>
 </main>
 
@@ -416,6 +460,10 @@ function updCards(d) {
   setT('btW', fx(d.bt.w, 1) + ' W'); setT('btV', fx(d.bt.v, 1)); setT('btA', fx(d.bt.a, 2));
   const smooth = num(d.h2a), raw = num(d.h2t), surp = num(d.surp);
   setT('h2W', smooth.toFixed(2) + ' A'); setT('h2T', raw.toFixed(2)); setT('surpC', surp.toFixed(1));
+  setT('iSmooth', smooth.toFixed(2) + ' A'); setT('iRaw', raw.toFixed(2) + ' A');
+  setT('iSensor', num(d.ld.a).toFixed(2) + ' A'); setT('iSurp', surp.toFixed(1) + ' W');
+  setT('simBadge', d.sim ? 'ON' : 'OFF');
+  $('simTg').classList.toggle('on', !!d.sim);
 
   const s = String(d.state || '');
   const b = $('stBadge');
@@ -426,7 +474,7 @@ function updCards(d) {
   const deg = Math.max(0, Math.min(180, Math.round(num(d.srv)))), pct = deg / 180;
   $('srvArc').setAttribute('stroke-dashoffset', (100.5 * (1 - pct)).toFixed(1));
   $('srvNeedle').setAttribute('transform', 'rotate(' + (-90 + deg) + ' 40 44)');
-  setT('srvDeg', deg); setT('srvTgt', smooth.toFixed(2)); setT('srvAct', fx(d.ld.a, 2)); setT('srvSurp', surp.toFixed(1));
+  setT('srvDeg', deg); setT('srvTgt', smooth.toFixed(2)); setT('srvAct', fx(d.ld.a, 2)); setT('srvErr', Math.abs(smooth - num(d.ld.a)).toFixed(2));
   $('srvBar').style.width = Math.round(pct * 100) + '%';
   setT('srvPct', Math.round(pct * 100) + '%');
 }
@@ -452,6 +500,7 @@ function onState(row) {
   setT('updLbl', 'Update ' + fmtT(Date.parse(row.updated_at)) +
        (row.data.rtt ? ' · latensi ' + row.data.rtt + ' ms' : ''));
   if (isNew && rangeH === 0) pushLive(row.data);
+  if (isNew && mqC && mqC.connected) mqC.publish($('mTopic').value, JSON.stringify(row.data), { qos: 0 });
   updCards(curData);
   updatePolarity(curData);
   refreshOnline();
@@ -606,6 +655,41 @@ function startApp() {
   ageTimer  = setInterval(refreshOnline, 1000);
   window.addEventListener('resize', redraw);
 }
+
+/* ================= MQTT (library dimuat saat dibutuhkan) ================= */
+let mqC = null;
+function loadMqttLib() {
+  return new Promise((res, rej) => {
+    if (window.mqtt) return res();
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.0.5/mqtt.min.js';
+    s.onload = res;
+    s.onerror = () => rej(new Error('library MQTT gagal dimuat (perlu internet)'));
+    document.head.appendChild(s);
+  });
+}
+function mqSt(cls, txt) { const e = $('mqSt'); e.className = 'mqs ' + cls; e.textContent = txt; }
+async function mqttCon() {
+  if (mqC) { mqC.end(true); mqC = null; }
+  mqSt('', '● Menghubungkan…');
+  try { await loadMqttLib(); } catch (e) { mqSt('', '● ' + e.message); return; }
+  const broker = $('mBroker').value.trim();
+  try {
+    mqC = mqtt.connect(broker, {
+      clientId: 'ems_' + Math.random().toString(16).slice(2, 10),
+      clean: true, connectTimeout: 6000, reconnectPeriod: 5000, protocolVersion: 5
+    });
+  } catch (e) { mqSt('', '● Error: ' + e.message); return; }
+  mqC.on('connect', () => mqSt('ok', '● Terhubung ke ' + broker));
+  mqC.on('error', e => mqSt('', '● Error: ' + e.message));
+  mqC.on('close', () => mqSt('', '● Terputus'));
+}
+function mqttDis() {
+  if (mqC) { mqC.end(true); mqC = null; }
+  mqSt('', '● Tidak terhubung');
+}
+$('mqCon').addEventListener('click', mqttCon);
+$('mqDis').addEventListener('click', mqttDis);
 
 function init() {
   $('topRight').hidden = true;
