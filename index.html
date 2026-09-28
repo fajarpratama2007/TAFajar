@@ -133,10 +133,8 @@ button,input{font-family:inherit}
 <body>
 <header class="topbar">
   <h1>⚡ EMS <em>Dashboard</em></h1>
-  <div class="tr" id="topRight" hidden>
+  <div class="tr" id="topRight">
     <div class="dotx" id="devDot"></div><span id="devLbl">Perangkat offline</span>
-    <span id="userLbl"></span>
-    <button class="linkbtn" id="logoutBtn">Keluar</button>
   </div>
 </header>
 <div class="alert err" id="alert" hidden></div>
@@ -146,20 +144,6 @@ button,input{font-family:inherit}
   <b>Konfigurasi belum diisi.</b><br>
   Buka <code>config.js</code> dan isi <code>SUPABASE_URL</code> serta <code>SUPABASE_ANON_KEY</code>
   (Supabase → Project Settings → API, kunci <i>anon public</i>). Lihat README.md.
-</div>
-
-<!-- login -->
-<div class="login-wrap" id="loginView" hidden>
-  <form class="login" id="loginForm" autocomplete="on">
-    <h2>Masuk</h2>
-    <p>Login untuk melihat dan mengendalikan sistem EMS.</p>
-    <div class="field"><label for="email">Email</label>
-      <input id="email" type="email" autocomplete="username" required></div>
-    <div class="field"><label for="pass">Password</label>
-      <input id="pass" type="password" autocomplete="current-password" required></div>
-    <button class="btn btn-main" id="loginBtn" type="submit">Masuk</button>
-    <div class="err-msg" id="loginErr"></div>
-  </form>
 </div>
 
 <!-- aplikasi -->
@@ -575,9 +559,8 @@ $('rangeBtns').addEventListener('click', e => {
 });
 
 /* ================= APP LIFECYCLE ================= */
-function startApp(session) {
-  $('loginView').hidden = true; $('main').hidden = false; $('topRight').hidden = false;
-  setT('userLbl', session.user.email || '');
+function startApp() {
+  $('main').hidden = false;
   firstState = true; lastSeen = 0; lastUpdatedAt = null;
 
   fetchState(); loadHistory();
@@ -593,32 +576,14 @@ function startApp(session) {
   window.addEventListener('resize', redraw);
 }
 
-function stopApp() {
-  clearInterval(pollTimer); clearInterval(histTimer); clearInterval(ageTimer);
-  if (sb) sb.removeAllChannels();
-  $('main').hidden = true; $('topRight').hidden = true; $('loginView').hidden = false;
-  showAlert('', '');
-}
-
-async function init() {
+function init() {
+  $('topRight').hidden = true;
   if (!CONFIGURED) { $('setupNote').hidden = false; return; }
   if (!window.supabase) { showAlert('Library Supabase gagal dimuat (perlu internet)', 'err'); return; }
-  sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
-
-  $('loginForm').addEventListener('submit', async e => {
-    e.preventDefault();
-    $('loginBtn').disabled = true; setT('loginErr', '');
-    const { error } = await sb.auth.signInWithPassword({ email: $('email').value.trim(), password: $('pass').value });
-    $('loginBtn').disabled = false;
-    if (error) setT('loginErr', error.message === 'Invalid login credentials' ? 'Email atau password salah' : error.message);
-  });
-  $('logoutBtn').addEventListener('click', () => sb.auth.signOut());
-
-  let started = false;
-  sb.auth.onAuthStateChange((event, session) => {
-    if (session && !started) { started = true; startApp(session); }
-    else if (!session && (started || event === 'SIGNED_OUT' || event === 'INITIAL_SESSION')) { started = false; stopApp(); }
-  });
+  $('topRight').hidden = false;
+  sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY,
+    { auth: { persistSession: false, autoRefreshToken: false } });
+  startApp();
 }
 init();
 </script>
