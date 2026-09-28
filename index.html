@@ -128,6 +128,22 @@ button,input{font-family:inherit}
 .sbadge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:10px;font-weight:600;background:#2d1b00;color:var(--orange);border:1px solid #fb923c35;margin-left:6px}
 .tw-note{margin-top:8px;font-size:11px;color:var(--muted);line-height:1.6}
 
+.tw{cursor:pointer}
+.sbadge.real{background:#16301e;color:var(--green);border-color:#22c55e40}
+.sbadge.sim{background:#0e2233;color:var(--blue);border-color:#38bdf840}
+.simp{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px;margin-top:10px}
+.simp h3{font-size:12px;font-weight:600;margin-bottom:12px;color:var(--orange)}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.srow{display:flex;flex-direction:column;gap:5px}
+.srow label{font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
+.srow label span{color:var(--text);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--orange);cursor:pointer}
+input[type=checkbox]{accent-color:var(--orange);width:15px;height:15px;cursor:pointer}
+.schk{display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer}
+.sim-sep{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin:12px 0;cursor:pointer;user-select:none}
+.sim-sep>span{font-size:11px;color:var(--muted)}
+.okbox{font-size:11px;color:var(--green);background:#16301e;border:1px solid #22c55e20;border-radius:8px;padding:8px 10px}
+
 /* mqtt */
 .mqr{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
 .mqr input[type=text]{background:var(--bg2);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:7px 10px;font-size:12px;flex:1;min-width:140px}
@@ -281,11 +297,58 @@ button,input{font-family:inherit}
     <div class="note">Perintah dikirim lewat cloud dan diambil perangkat dalam ±2 detik. Urutan aman di perangkat: output diputus (cut) 3 detik → relay berpindah → output disambung kembali. Ditolak otomatis bila sistem sedang trip atau sensor error, dan perintah kedaluwarsa setelah 30 detik.</div>
   </div>
   <div class="sec">Simulasi Digital Twin</div>
-  <div class="tw" title="Mode simulasi hanya bisa diubah dari dashboard lokal ESP32">
+  <div class="tw" id="simTw">
     <span class="t">Simulation Mode <span class="sbadge" id="simBadge">OFF</span></span>
     <div class="tg" id="simTg"></div>
   </div>
-  <div class="tw-note">Hanya tampilan status. Mode simulasi mengganti pembacaan sensor asli, jadi tidak bisa diubah dari jarak jauh. Ubah lewat dashboard lokal ESP32 (IP di LCD).</div>
+  <div class="tw-note" id="simMsg">Simulasi mengganti pembacaan sensor asli. Otomatis mati bila tidak ada aktivitas dari halaman ini selama 5 menit.</div>
+
+  <div id="simCtrl" style="display:none">
+    <div class="simp">
+      <h3>⚙ Parameter Simulasi</h3>
+      <div class="sgrid">
+        <div class="srow">
+          <label>PV Voltage <span id="v_pvVolt">12.0 V</span></label>
+          <input type="range" id="pvVolt" min="0" max="24" step="0.1" value="12">
+        </div>
+        <div class="srow">
+          <label>PV Current <span id="v_pvAmp">0.0 A</span></label>
+          <input type="range" id="pvAmp" min="0" max="12" step="0.1" value="0">
+        </div>
+      </div>
+
+      <div class="sim-sep" id="partTw">
+        <span>Simulasi HHO &amp; Baterai juga <span id="partBadge" class="sbadge real">REALTIME</span></span>
+        <div class="tg" id="partTg"></div>
+      </div>
+
+      <div class="okbox" id="simRealNote">✓ HHO &amp; Baterai membaca sensor INA219 secara realtime</div>
+
+      <div id="partCtrl" style="display:none">
+        <div class="sgrid">
+          <div class="srow">
+            <label>HHO/Load Voltage <span id="v_loadVolt">12.0 V</span></label>
+            <input type="range" id="loadVolt" min="0" max="24" step="0.1" value="12">
+          </div>
+          <div class="srow">
+            <label>HHO/Load Current <span id="v_loadAmp">0.0 A</span></label>
+            <input type="range" id="loadAmp" min="0" max="12" step="0.1" value="0">
+          </div>
+          <div class="srow">
+            <label>Batt Voltage <span id="v_battVolt">12.0 V</span></label>
+            <input type="range" id="battVolt" min="10" max="15" step="0.1" value="12">
+          </div>
+          <div class="srow">
+            <label>Batt Current <span id="v_battAmp">0.0 A</span></label>
+            <input type="range" id="battAmp" min="-10" max="10" step="0.1" value="0">
+          </div>
+          <div class="srow">
+            <label class="schk"><input type="checkbox" id="h2Full"> H₂ Tank FULL</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="sec">MQTT Publish Opsional</div>
   <div class="panel">
@@ -462,8 +525,6 @@ function updCards(d) {
   setT('h2W', smooth.toFixed(2) + ' A'); setT('h2T', raw.toFixed(2)); setT('surpC', surp.toFixed(1));
   setT('iSmooth', smooth.toFixed(2) + ' A'); setT('iRaw', raw.toFixed(2) + ' A');
   setT('iSensor', num(d.ld.a).toFixed(2) + ' A'); setT('iSurp', surp.toFixed(1) + ' W');
-  setT('simBadge', d.sim ? 'ON' : 'OFF');
-  $('simTg').classList.toggle('on', !!d.sim);
 
   const s = String(d.state || '');
   const b = $('stBadge');
@@ -503,6 +564,7 @@ function onState(row) {
   if (isNew && mqC && mqC.connected) mqC.publish($('mTopic').value, JSON.stringify(row.data), { qos: 0 });
   updCards(curData);
   updatePolarity(curData);
+  syncSim(curData);
   refreshOnline();
 }
 
@@ -640,7 +702,9 @@ function startApp() {
   $('main').hidden = false;
   firstState = true; lastSeen = 0; lastUpdatedAt = null;
 
-  fetchState(); loadHistory();
+  fetchState(); loadHistory(); loadSimSettings();
+  clearInterval(simTimer);
+  simTimer = setInterval(() => { if (simOn) sendSim(); }, 60000);   // detak agar tidak kedaluwarsa 5 menit
   setT('histMsg', 'Mode Live: grafik terisi dari data yang masuk sejak halaman dibuka');
   pingViewer();
   viewTimer = setInterval(pingViewer, 10000);
@@ -655,6 +719,73 @@ function startApp() {
   ageTimer  = setInterval(refreshOnline, 1000);
   window.addEventListener('resize', redraw);
 }
+
+/* ================= SIMULASI (kendali jarak jauh lewat set_sim) ================= */
+let simOn = false, partOn = false, simT = null, simSynced = false, lastSimAction = 0, simTimer = null;
+
+function applySimUI() {
+  $('simTg').classList.toggle('on', simOn);
+  $('simBadge').textContent = simOn ? 'ON' : 'OFF';
+  $('simCtrl').style.display = simOn ? 'block' : 'none';
+  $('partTg').classList.toggle('on', partOn);
+  const pb = $('partBadge');
+  pb.textContent = partOn ? 'SIMULASI' : 'REALTIME';
+  pb.className = 'sbadge ' + (partOn ? 'sim' : 'real');
+  $('simRealNote').style.display = partOn ? 'none' : 'block';
+  $('partCtrl').style.display = partOn ? 'block' : 'none';
+}
+
+// ikuti kondisi asli perangkat (mis. simulasi mati otomatis / diubah dari dashboard lokal)
+function syncSim(d) {
+  const on = !!d.sim, part = !!d.sp;
+  if (!simSynced || (Date.now() - lastSimAction > 8000 && (on !== simOn || part !== partOn))) {
+    simSynced = true; simOn = on; partOn = part; applySimUI();
+  }
+}
+
+function toggleSim() {
+  simOn = !simOn;
+  if (simOn) partOn = false;        // default: HHO & baterai baca sensor asli
+  applySimUI(); schSim();
+}
+function togglePartial() { partOn = !partOn; applySimUI(); schSim(); }
+
+const SIM_UNIT = { pvVolt: 'V', pvAmp: 'A', loadVolt: 'V', loadAmp: 'A', battVolt: 'V', battAmp: 'A' };
+function simLabels() {
+  Object.keys(SIM_UNIT).forEach(id => {
+    setT('v_' + id, parseFloat($(id).value).toFixed(1) + ' ' + SIM_UNIT[id]);
+  });
+}
+function slu() { simLabels(); schSim(); }
+function schSim() { lastSimAction = Date.now(); clearTimeout(simT); simT = setTimeout(sendSim, 150); }
+
+async function sendSim() {
+  lastSimAction = Date.now();
+  const g = id => parseFloat($(id).value);
+  const { error } = await sb.rpc('set_sim', {
+    p_device: DEV, p_enabled: simOn, p_partial: partOn,
+    p_pv_v: g('pvVolt'), p_pv_a: g('pvAmp'), p_ld_v: g('loadVolt'), p_ld_a: g('loadAmp'),
+    p_bt_v: g('battVolt'), p_bt_a: g('battAmp'), p_h2_full: $('h2Full').checked
+  });
+  setT('simMsg', error ? 'Gagal mengirim: ' + error.message
+    : (simOn ? 'Terkirim — aktif di perangkat dalam ±1–5 dtk. Otomatis mati bila halaman ini ditutup > 5 menit.'
+             : 'Simulasi dimatikan. Otomatis mati bila tidak ada aktivitas dari halaman ini selama 5 menit.'));
+}
+
+async function loadSimSettings() {
+  const { data } = await sb.from('sim_settings').select('*').eq('device_id', DEV).maybeSingle();
+  if (!data) return;
+  const set = (id, v) => { $(id).value = v; };
+  set('pvVolt', data.pv_v); set('pvAmp', data.pv_a); set('loadVolt', data.ld_v);
+  set('loadAmp', data.ld_a); set('battVolt', data.bt_v); set('battAmp', data.bt_a);
+  $('h2Full').checked = !!data.h2_full;
+  simLabels();
+}
+
+$('simTw').addEventListener('click', toggleSim);
+$('partTw').addEventListener('click', togglePartial);
+Object.keys(SIM_UNIT).forEach(id => $(id).addEventListener('input', slu));
+$('h2Full').addEventListener('change', schSim);
 
 /* ================= MQTT (library dimuat saat dibutuhkan) ================= */
 let mqC = null;
@@ -692,6 +823,8 @@ $('mqCon').addEventListener('click', mqttCon);
 $('mqDis').addEventListener('click', mqttDis);
 
 function init() {
+  simLabels();
+  applySimUI();
   $('topRight').hidden = true;
   if (!CONFIGURED) { $('setupNote').hidden = false; return; }
   if (!window.supabase) { showAlert('Library Supabase gagal dimuat (perlu internet)', 'err'); return; }
