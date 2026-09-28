@@ -45,6 +45,8 @@ button,input{font-family:inherit}
 .dotx.on{background:var(--green);box-shadow:0 0 8px var(--green)}
 .linkbtn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer;transition:color .2s,border-color .2s}
 .linkbtn:hover{color:var(--text);border-color:var(--blue)}
+.navlink{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:7px 12px;font-size:12px;font-weight:600;text-decoration:none;transition:border-color .18s,transform .18s}
+.navlink:hover{border-color:var(--blue);transform:translateY(-1px)}
 .alert{padding:10px 20px;font-size:13px;font-weight:600;text-align:center;border-bottom:1px solid transparent}
 .alert:not([hidden]){animation:slideDown .28s cubic-bezier(.2,.8,.2,1)}
 .alert.err{background:var(--err-bg);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)}
@@ -171,6 +173,7 @@ input[type=checkbox]{accent-color:var(--orange);width:15px;height:15px;cursor:po
     <h1>HHO Dashboard<em>Hydrogen Energy Monitor</em></h1>
   </div>
   <div class="top-actions">
+    <a class="navlink" href="log.html">📊 Log Data</a>
     <button class="theme-toggle" id="themeToggle" type="button" aria-label="Aktifkan tema terang" title="Ganti tema">☀</button>
     <div class="tr" id="topRight">
       <div class="dotx" id="devDot"></div><span id="devLbl">Perangkat offline</span>

@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f1117">
+<meta name="robots" content="noindex">
+<title>Log Data — HHO Dashboard</title>
+<style>
+:root{
+  --bg:#09111d;--bg2:#111d2d;--bg3:#17263a;
+  --card:#101c2c;--card-hi:#15243a;--border:#263a54;
+  --text:#edf4fc;--muted:#93a8bf;
+  --green:#36d399;--yellow:#f6c85f;--red:#fb7185;
+  --blue:#58b8ff;--purple:#a78bfa;--orange:#fb923c;--teal:#2dd4bf;
+  --surface-muted:#0d1929;--surface-accent:#0d2236;
+  --ok-bg:#113325;--warn-bg:#332b12;--err-bg:#3a1721;--info-bg:#0d2942;
+  --topbar-bg:rgba(9,17,29,.82);
+  --r:16px;
+}
+[data-theme="light"]{
+  --bg:#edf5fb;--bg2:#ffffff;--bg3:#e5eff7;--card:#ffffff;--card-hi:#f8fbfe;--border:#c9d9e7;
+  --text:#112a42;--muted:#5c7389;--green:#07875d;--yellow:#a96d00;--red:#c62945;
+  --blue:#087bc2;--purple:#7652cc;--orange:#c85b16;--teal:#00877e;
+  --surface-muted:#f3f7fb;--surface-accent:#e9f4fc;
+  --ok-bg:#e8f7ef;--warn-bg:#fff5df;--err-bg:#ffedf0;--info-bg:#eaf5fd;
+  --topbar-bg:rgba(255,255,255,.88);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh;line-height:1.35;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+button,input,select{font-family:inherit}
+[hidden]{display:none!important}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  padding:14px max(20px,calc((100vw - 1160px)/2));background:var(--topbar-bg);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-mark{position:relative;width:32px;height:32px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(145deg,#31d9b0,#258de7);box-shadow:0 7px 16px #0e89d050}
+.brand-mark span{font-size:13px;font-weight:850;letter-spacing:-1px;color:#062440}
+.topbar h1{font-size:16px;font-weight:800;letter-spacing:-.35px;line-height:1;white-space:nowrap}
+.topbar h1 em{display:block;margin-top:3px;color:var(--muted);font-size:9px;font-style:normal;font-weight:700;letter-spacing:1.1px;text-transform:uppercase}
+.top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.navlink{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:7px 12px;font-size:12px;font-weight:600;text-decoration:none;transition:border-color .18s,transform .18s}
+.navlink:hover{border-color:var(--blue);transform:translateY(-1px)}
+.theme-toggle{width:38px;height:32px;border:1px solid var(--border);border-radius:9px;background:var(--bg3);color:var(--text);display:grid;place-items:center;font-size:16px;cursor:pointer;transition:transform .18s,border-color .18s}
+.theme-toggle:hover{transform:translateY(-1px);border-color:var(--blue)}
+.dotx{width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 6px var(--red);flex-shrink:0}
+.dotx.on{background:var(--green);box-shadow:0 0 8px var(--green)}
+.tr{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+
+.setup-note{max-width:560px;margin:40px auto;padding:20px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);font-size:13px;line-height:1.6}
+.setup-note code{background:var(--bg3);padding:1px 6px;border-radius:5px}
+
+.main{padding:26px 20px 60px;max-width:1160px;margin:auto}
+.sec{font-size:10px;font-weight:750;letter-spacing:1.15px;color:var(--muted);text-transform:uppercase;margin:28px 0 11px}
+.sec:first-child{margin-top:4px}
+.lede{font-size:12px;color:var(--muted);margin:-6px 0 18px;line-height:1.6}
+
+.panel{background:linear-gradient(145deg,var(--card-hi),var(--card));border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:0 10px 24px #0208121a;margin-bottom:14px}
+
+/* filter */
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.fgroup{display:flex;flex-direction:column;gap:5px}
+.fgroup label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.fgroup input,.fgroup select{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-size:12px;min-height:34px}
+.presets{display:flex;gap:6px;flex-wrap:wrap}
+.presets button{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;transition:color .2s,border-color .2s,background .2s}
+.presets button.on{color:var(--blue);border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--surface-accent)}
+.btn{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:border-color .2s,transform .2s}
+.btn:hover{border-color:var(--blue);transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-primary{background:linear-gradient(135deg,#2597e8,#1c7bc4);border-color:transparent;color:#fff}
+.filter-msg{font-size:11px;color:var(--yellow);margin-top:8px;min-height:14px}
+
+/* ringkasan */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.card{--c:var(--blue);position:relative;overflow:hidden;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 12%,var(--card)),var(--card) 72%);
+  border:1px solid var(--border);border-radius:14px;padding:15px}
+.card::after{content:'';position:absolute;inset:0 auto 0 0;width:3px;background:var(--c);opacity:.82}
+.c-pv{--c:var(--yellow)}.c-ld{--c:var(--blue)}.c-bt{--c:var(--green)}.c-trip{--c:var(--red)}.c-n{--c:var(--purple)}.c-t{--c:var(--teal)}
+.clb{font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:7px}
+.cval{font-size:21px;font-weight:750;letter-spacing:-.5px;line-height:1.15;color:var(--c);font-variant-numeric:tabular-nums}
+.csub{font-size:10.5px;color:var(--muted);margin-top:5px}
+
+/* distribusi state */
+.stbar-row{display:grid;grid-template-columns:150px 1fr 90px 70px;align-items:center;gap:10px;padding:7px 0;font-size:12px}
+.stbar-row+.stbar-row{border-top:1px solid var(--border)}
+.stbar-track{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.stbar-fill{height:100%;border-radius:4px}
+.stbar-pct{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.stbar-n{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:11px}
+
+/* tabel */
+.tblwrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px}
+table.dt{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}
+table.dt th{position:sticky;top:0;background:var(--bg3);color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px;font-size:10px;padding:9px 10px;text-align:left;border-bottom:1px solid var(--border)}
+table.dt td{padding:8px 10px;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums}
+table.dt tbody tr:hover{background:var(--surface-muted)}
+table.dt tbody tr:last-child td{border-bottom:none}
+.badge-sm{padding:3px 8px;border-radius:99px;font-size:10px;font-weight:700}
+.b-ok{background:var(--ok-bg);color:var(--green)}
+.b-warn{background:var(--warn-bg);color:var(--yellow)}
+.b-err{background:var(--err-bg);color:var(--red)}
+.b-inf{background:var(--info-bg);color:var(--blue)}
+.b-mut{background:var(--bg3);color:var(--muted)}
+.kind-state{color:var(--blue)}.kind-polarity{color:var(--purple)}.kind-sim{color:var(--orange)}
+
+.pager{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.pager .btns{display:flex;gap:6px}
+
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tabs button{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer}
+.tabs button.on{color:var(--text);border-color:var(--blue);background:var(--surface-accent)}
+.tabpanel[hidden]{display:none}
+
+.empty{padding:22px;text-align:center;color:var(--muted);font-size:12px}
+
+@media(max-width:640px){
+  .topbar{padding:10px 14px}
+  .main{padding:16px 14px 40px}
+  .stbar-row{grid-template-columns:110px 1fr 60px}
+  .stbar-n{display:none}
+}
+</style>
+</head>
+
+<body>
+<header class="topbar">
+  <div class="brand" aria-label="HHO Dashboard">
+    <div class="brand-mark" aria-hidden="true"><span>H₂</span></div>
+    <h1>Log Data<em>Data mentah &amp; kejadian</em></h1>
+  </div>
+  <div class="top-actions">
+    <a class="navlink" href="index.html">← Dashboard</a>
+    <button class="theme-toggle" id="themeToggle" type="button" title="Ganti tema">☀</button>
+    <div class="tr" id="topRight">
+      <div class="dotx" id="devDot"></div><span id="devLbl">Perangkat offline</span>
+    </div>
+  </div>
+</header>
+
+<div class="setup-note" id="setupNote" hidden>
+  <b>Konfigurasi belum diisi.</b><br>
+  Buka <code>config.js</code> dan isi <code>SUPABASE_URL</code> serta <code>SUPABASE_ANON_KEY</code>.
+</div>
+
+<main class="main" id="main" hidden>
+  <div class="sec">Rentang Data</div>
+  <p class="lede">Semua angka di halaman ini dihitung langsung dari data mentah tersimpan (tabel <code>telemetry</code>, sampling tiap 10 detik saat perangkat online) dan log kejadian (tercatat otomatis setiap kali status/polaritas/simulasi berubah) — tanpa pembulatan grafik.</p>
+
+  <div class="panel">
+    <div class="filters">
+      <div class="fgroup">
+        <label>Preset</label>
+        <div class="presets" id="presetBtns">
+          <button data-h="24">24 jam</button>
+          <button data-h="168" class="on">7 hari</button>
+          <button data-h="720">30 hari</button>
+          <button data-h="0">Semua data</button>
+        </div>
+      </div>
+      <div class="fgroup"><label for="fFrom">Dari</label><input type="datetime-local" id="fFrom"></div>
+      <div class="fgroup"><label for="fTo">Sampai</label><input type="datetime-local" id="fTo"></div>
+      <div class="fgroup"><label for="fState">Status</label>
+        <select id="fState">
+          <option value="">Semua status</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="applyBtn">Terapkan</button>
+    </div>
+    <div class="filter-msg" id="filterMsg"></div>
+  </div>
+
+  <div class="sec">Ringkasan Rentang Terpilih</div>
+  <div class="cards" id="summaryCards">
+    <div class="card c-n"><div class="clb">Total Sampel</div><div class="cval" id="sTotal">—</div><div class="csub" id="sSpan">—</div></div>
+    <div class="card c-pv"><div class="clb">Energi PV Masuk</div><div class="cval" id="sPv">— Wh</div><div class="csub">Σ daya × waktu</div></div>
+    <div class="card c-ld"><div class="clb">Energi ke HHO/Beban</div><div class="cval" id="sLd">— Wh</div><div class="csub">estimasi input elektrolisis</div></div>
+    <div class="card c-bt"><div class="clb">Baterai Charge / Discharge</div><div class="cval" id="sBt">— / — Wh</div><div class="csub">positif = mengisi</div></div>
+    <div class="card c-trip"><div class="clb">Kejadian Trip / Error</div><div class="cval" id="sTrip">—</div><div class="csub" id="sTripDur">total durasi —</div></div>
+    <div class="card c-t"><div class="clb">Pergantian Polaritas</div><div class="cval" id="sPol">—</div><div class="csub">realisasi fisik (bukan sekadar perintah)</div></div>
+  </div>
+
+  <div class="sec">Distribusi Status (di rentang terpilih)</div>
+  <div class="panel" id="stateDistPanel">
+    <div class="empty">Memuat…</div>
+  </div>
+
+  <div class="sec">Detail</div>
+  <div class="tabs" id="tabBtns">
+    <button data-tab="raw" class="on">Data Mentah</button>
+    <button data-tab="events">Log Kejadian</button>
+    <button data-tab="daily">Energi Harian</button>
+  </div>
+
+  <div class="tabpanel" id="tab-raw">
+    <div class="panel">
+      <div class="ch" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <span class="lede" style="margin:0" id="rawInfo">—</span>
+        <button class="btn" id="csvBtn">Unduh CSV mentah (sesuai filter)</button>
+      </div>
+      <div class="tblwrap"><table class="dt" id="rawTable">
+        <thead><tr>
+          <th>Waktu</th><th>Status</th><th>Pol</th><th>Sim</th>
+          <th>PV V</th><th>PV A</th><th>PV W</th>
+          <th>HHO V</th><th>HHO A</th><th>HHO W</th>
+          <th>Batt V</th><th>Batt A</th><th>Batt W</th>
+          <th>H2 Target</th><th>H2 Raw</th><th>Surplus</th><th>Servo°</th>
+        </tr></thead>
+        <tbody id="rawBody"></tbody>
+      </table></div>
+      <div class="pager">
+        <span id="rawPageInfo">—</span>
+        <div class="btns">
+          <button class="btn" id="rawPrev">‹ Sebelumnya</button>
+          <button class="btn" id="rawNext">Berikutnya ›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="tab-events" hidden>
+    <div class="panel">
+      <div class="ch" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <span class="lede" style="margin:0" id="eventsInfo">—</span>
+        <select id="eventKindFilter" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 10px;font-size:12px">
+          <option value="">Semua jenis</option>
+          <option value="state">Perubahan status</option>
+          <option value="polarity">Pergantian polaritas</option>
+          <option value="sim">Simulasi ON/OFF</option>
+        </select>
+      </div>
+      <div class="tblwrap"><table class="dt" id="eventsTable">
+        <thead><tr><th>Waktu</th><th>Jenis</th><th>Dari</th><th>→</th><th>Ke</th></tr></thead>
+        <tbody id="eventsBody"></tbody>
+      </table></div>
+      <div class="pager">
+        <span id="eventsPageInfo">—</span>
+        <div class="btns">
+          <button class="btn" id="eventsPrev">‹ Sebelumnya</button>
+          <button class="btn" id="eventsNext">Berikutnya ›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="tab-daily" hidden>
+    <div class="panel">
+      <div class="ch" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <span class="lede" style="margin:0">Rekap energi per hari (independen dari filter di atas)</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="dailyDays" value="30" min="1" max="365" style="width:70px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 10px;font-size:12px">
+          <button class="btn" id="dailyBtn">Tampilkan</button>
+        </div>
+      </div>
+      <div class="tblwrap"><table class="dt" id="dailyTable">
+        <thead><tr><th>Tanggal</th><th>PV (Wh)</th><th>HHO/Beban (Wh)</th><th>Baterai Isi (Wh)</th><th>Baterai Pakai (Wh)</th></tr></thead>
+        <tbody id="dailyBody"></tbody>
+      </table></div>
+    </div>
+  </div>
+</main>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+'use strict';
+const CFG = window.EMS_CONFIG || {};
+const DEV = CFG.DEVICE_ID || 'ems-01';
+const CONFIGURED = !!(CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY && !/YOUR/.test(CFG.SUPABASE_URL + CFG.SUPABASE_ANON_KEY));
+const ONLINE_MS = 12000;
+const RAW_PAGE = 100, EVENTS_PAGE = 100;
+const STATE_COLOR = {
+  'DIRECT SUPPLY': 'var(--green)', 'BATT CHARGING': 'var(--green)',
+  'H2 PRODUCTION': 'var(--blue)', 'FUEL CELL': 'var(--blue)', 'STARTING': 'var(--muted)',
+  'TRIP HOLD': 'var(--yellow)', 'TRIP RECOVERED': 'var(--yellow)', 'POLARITY CHANGE': 'var(--yellow)',
+  'TRIP OVERLOAD': 'var(--red)', 'SENSOR ERROR': 'var(--red)'
+};
+const STATE_BADGE = {
+  'DIRECT SUPPLY': 'b-ok', 'BATT CHARGING': 'b-ok',
+  'H2 PRODUCTION': 'b-inf', 'FUEL CELL': 'b-inf', 'STARTING': 'b-inf',
+  'TRIP HOLD': 'b-warn', 'TRIP RECOVERED': 'b-warn', 'POLARITY CHANGE': 'b-warn',
+  'TRIP OVERLOAD': 'b-err', 'SENSOR ERROR': 'b-err'
+};
+const TRIP_STATES = ['TRIP OVERLOAD', 'TRIP HOLD', 'SENSOR ERROR'];
+
+const $ = id => document.getElementById(id);
+const THEME_KEY = 'hho-dashboard-theme';
+function applyTheme(theme) {
+  const light = theme === 'light';
+  document.documentElement.dataset.theme = light ? 'light' : 'dark';
+  const b = $('themeToggle'); b.textContent = light ? '☾' : '☀';
+}
+let savedTheme = 'dark';
+try { savedTheme = localStorage.getItem(THEME_KEY) || 'dark'; } catch (_) {}
+applyTheme(savedTheme);
+$('themeToggle').addEventListener('click', () => {
+  const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+  applyTheme(next);
+  try { localStorage.setItem(THEME_KEY, next); } catch (_) {}
+});
+
+const setT = (id, v) => { const e = $(id); if (e) e.textContent = v; };
+const num = (v, d = 0) => { const n = parseFloat(v); return Number.isFinite(n) ? n : d; };
+const p2 = n => String(n).padStart(2, '0');
+const fmtDT = t => { const d = new Date(t); return p2(d.getDate()) + '/' + p2(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds()); };
+const toLocalInput = t => { const d = new Date(t), off = d.getTimezoneOffset(); return new Date(d - off * 60000).toISOString().slice(0, 16); };
+const fromLocalInput = s => s ? new Date(s).toISOString() : null;
+const fmtDur = sec => {
+  sec = Math.round(sec);
+  if (sec < 60) return sec + ' dtk';
+  const m = Math.floor(sec / 60), s = sec % 60;
+  if (m < 60) return m + ' mnt ' + s + ' dtk';
+  const h = Math.floor(m / 60), mm = m % 60;
+  if (h < 24) return h + ' jam ' + mm + ' mnt';
+  const d = Math.floor(h / 24), hh = h % 24;
+  return d + ' hari ' + hh + ' jam';
+};
+const csvVal = v => (v === null || v === undefined) ? '' : (typeof v === 'number' ? v.toFixed(3) : String(v).replace(/,/g, ';'));
+
+let sb = null;
+let range = { from: null, to: null, presetH: 168 };
+let rawOffset = 0, rawTotal = 0, rawCount = 0;
+let evOffset = 0, evTotal = 0;
+let lastSeen = 0, lastUpdatedAt = null;
+
+function isOnline() { return lastSeen > 0 && Date.now() - lastSeen < ONLINE_MS; }
+
+async function refreshDeviceDot() {
+  const { data } = await sb.from('device_state').select('updated_at').eq('device_id', DEV).maybeSingle();
+  if (data && data.updated_at !== lastUpdatedAt) { lastUpdatedAt = data.updated_at; lastSeen = Date.now(); }
+  const on = isOnline();
+  $('devDot').classList.toggle('on', on);
+  setT('devLbl', on ? 'Perangkat online' : 'Perangkat offline');
+}
+
+/* ================= FILTER ================= */
+function applyPreset(hours) {
+  range.presetH = hours;
+  const now = new Date();
+  range.to = now.toISOString();
+  range.from = hours > 0 ? new Date(now - hours * 3600000).toISOString() : null;
+  $('fFrom').value = range.from ? toLocalInput(range.from) : '';
+  $('fTo').value = toLocalInput(range.to);
+  [...$('presetBtns').children].forEach(b => b.classList.toggle('on', +b.dataset.h === hours));
+}
+$('presetBtns').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  applyPreset(+b.dataset.h);
+  loadAll();
+});
+$('applyBtn').addEventListener('click', () => {
+  range.presetH = -1;
+  [...$('presetBtns').children].forEach(b => b.classList.remove('on'));
+  range.from = fromLocalInput($('fFrom').value);
+  range.to = fromLocalInput($('fTo').value) || new Date().toISOString();
+  if (range.from && new Date(range.from) >= new Date(range.to)) {
+    setT('filterMsg', '"Dari" harus lebih awal dari "Sampai"'); return;
+  }
+  setT('filterMsg', '');
+  loadAll();
+});
+
+/* ================= RINGKASAN ================= */
+async function loadSummary() {
+  const from = range.from || '1970-01-01T00:00:00Z';
+  const to = range.to || new Date().toISOString();
+
+  const { count } = await sb.from('telemetry').select('id', { count: 'exact', head: true })
+    .eq('device_id', DEV).gte('created_at', from).lte('created_at', to);
+  setT('sTotal', (count ?? 0).toLocaleString('id-ID'));
+
+  const [{ data: first }, { data: last }] = await Promise.all([
+    sb.from('telemetry').select('created_at').eq('device_id', DEV).gte('created_at', from).lte('created_at', to).order('created_at', { ascending: true }).limit(1).maybeSingle(),
+    sb.from('telemetry').select('created_at').eq('device_id', DEV).gte('created_at', from).lte('created_at', to).order('created_at', { ascending: false }).limit(1).maybeSingle()
+  ]);
+  setT('sSpan', first && last ? fmtDT(first.created_at) + ' — ' + fmtDT(last.created_at) : 'tidak ada data');
+
+  const { data: en, error: enErr } = await sb.rpc('energy_summary', { p_device: DEV, p_from: from, p_to: to });
+  if (!enErr && en && en[0]) {
+    const e = en[0];
+    setT('sPv', num(e.pv_wh).toFixed(1) + ' Wh');
+    setT('sLd', num(e.ld_wh).toFixed(1) + ' Wh');
+    setT('sBt', num(e.bt_charge_wh).toFixed(1) + ' / ' + num(e.bt_discharge_wh).toFixed(1) + ' Wh');
+  }
+
+  const { data: ev, error: evErr } = await sb.rpc('event_summary', { p_device: DEV, p_from: from, p_to: to });
+  renderStateDist(evErr ? [] : (ev || []));
+
+  if (!evErr && ev) {
+    const trips = ev.filter(r => TRIP_STATES.includes(r.state));
+    const tripCount = trips.reduce((a, r) => a + Number(r.occurrences), 0);
+    const tripDur = trips.reduce((a, r) => a + Number(r.total_seconds), 0);
+    setT('sTrip', tripCount.toLocaleString('id-ID') + 'x');
+    setT('sTripDur', 'total durasi ' + fmtDur(tripDur));
+  } else { setT('sTrip', '0x'); setT('sTripDur', 'total durasi 0 dtk'); }
+
+  const { count: polCount } = await sb.from('events').select('id', { count: 'exact', head: true })
+    .eq('device_id', DEV).eq('kind', 'polarity').gte('created_at', from).lte('created_at', to);
+  setT('sPol', (polCount ?? 0).toLocaleString('id-ID') + 'x');
+}
+
+function renderStateDist(rows) {
+  const el = $('stateDistPanel');
+  if (!rows.length) { el.innerHTML = '<div class="empty">Belum ada kejadian tercatat pada rentang ini</div>'; return; }
+  const total = rows.reduce((a, r) => a + Number(r.total_seconds), 0) || 1;
+  el.innerHTML = rows.map(r => {
+    const pct = Math.max(0.4, Number(r.total_seconds) / total * 100);
+    const color = STATE_COLOR[r.state] || 'var(--muted)';
+    return `<div class="stbar-row">
+      <span>${r.state || '—'}</span>
+      <div class="stbar-track"><div class="stbar-fill" style="width:${pct.toFixed(1)}%;background:${color}"></div></div>
+      <span class="stbar-pct">${(Number(r.total_seconds) / total * 100).toFixed(1)}%</span>
+      <span class="stbar-n">${r.occurrences}x · ${fmtDur(r.total_seconds)}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ================= DATA MENTAH ================= */
+async function loadStateOptions() {
+  const sel = $('fState');
+  Object.keys(STATE_BADGE).forEach(s => {
+    const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o);
+  });
+}
+$('fState').addEventListener('change', () => { rawOffset = 0; loadRaw(); });
+
+function rawRowsQuery() {
+  let q = sb.from('telemetry')
+    .select('created_at,state,sim,pol,pv_v,pv_a,pv_w,ld_v,ld_a,ld_w,bt_v,bt_a,bt_w,h2a,h2t,surp,srv', { count: 'exact' })
+    .eq('device_id', DEV);
+  if (range.from) q = q.gte('created_at', range.from);
+  if (range.to) q = q.lte('created_at', range.to);
+  if ($('fState').value) q = q.eq('state', $('fState').value);
+  return q;
+}
+
+async function loadRaw() {
+  $('rawBody').innerHTML = '<tr><td colspan="17" class="empty">Memuat…</td></tr>';
+  const { data, count, error } = await rawRowsQuery().order('created_at', { ascending: false }).range(rawOffset, rawOffset + RAW_PAGE - 1);
+  if (error) { $('rawBody').innerHTML = `<tr><td colspan="17" class="empty">Gagal memuat: ${error.message}</td></tr>`; return; }
+  rawTotal = count ?? 0;
+  rawCount = data.length;
+  if (!data.length) { $('rawBody').innerHTML = '<tr><td colspan="17" class="empty">Tidak ada data pada filter ini</td></tr>'; }
+  else {
+    $('rawBody').innerHTML = data.map(r => `<tr>
+      <td>${fmtDT(r.created_at)}</td>
+      <td><span class="badge-sm ${STATE_BADGE[r.state] || 'b-mut'}">${r.state || '—'}</span></td>
+      <td>${r.pol === null ? '—' : (Number(r.pol) + 1)}</td>
+      <td>${r.sim ? 'ON' : 'OFF'}</td>
+      <td>${num(r.pv_v).toFixed(1)}</td><td>${num(r.pv_a).toFixed(2)}</td><td>${num(r.pv_w).toFixed(1)}</td>
+      <td>${num(r.ld_v).toFixed(1)}</td><td>${num(r.ld_a).toFixed(2)}</td><td>${num(r.ld_w).toFixed(1)}</td>
+      <td>${num(r.bt_v).toFixed(1)}</td><td>${num(r.bt_a).toFixed(2)}</td><td>${num(r.bt_w).toFixed(1)}</td>
+      <td>${num(r.h2t).toFixed(2)}</td><td>${num(r.h2a).toFixed(2)}</td><td>${num(r.surp).toFixed(1)}</td><td>${num(r.srv).toFixed(0)}</td>
+    </tr>`).join('');
+  }
+  setT('rawInfo', rawTotal.toLocaleString('id-ID') + ' baris data mentah pada filter ini (1 baris = 1 sampel tiap 10 detik)');
+  updatePager('raw', rawOffset, rawTotal, rawCount, RAW_PAGE);
+}
+$('rawPrev').addEventListener('click', () => { rawOffset = Math.max(0, rawOffset - RAW_PAGE); loadRaw(); });
+$('rawNext').addEventListener('click', () => { if (rawOffset + RAW_PAGE < rawTotal) { rawOffset += RAW_PAGE; loadRaw(); } });
+
+function updatePager(prefix, offset, total, count, pageSize) {
+  const from = total ? offset + 1 : 0, to = offset + count;
+  setT(prefix + 'PageInfo', total ? `Menampilkan ${from.toLocaleString('id-ID')}–${to.toLocaleString('id-ID')} dari ${total.toLocaleString('id-ID')}` : 'Tidak ada data');
+  $(prefix + 'Prev').disabled = offset <= 0;
+  $(prefix + 'Next').disabled = offset + pageSize >= total;
+}
+
+/* ================= UNDUH CSV MENTAH ================= */
+let csvBusy = false;
+async function downloadRawCsv() {
+  if (csvBusy) return;
+  csvBusy = true;
+  const btn = $('csvBtn'); const orig = btn.textContent;
+  const head = 'waktu,state,polaritas,simulasi,pv_v,pv_a,pv_w,ld_v,ld_a,ld_w,bt_v,bt_a,bt_w,h2_target_a,h2_raw_a,surplus_w,servo_deg';
+  const lines = [head];
+  const CAP = 50000, BATCH = 1000;
+  let offset = 0, fetched = 0, total = Infinity;
+  try {
+    while (offset < total && fetched < CAP) {
+      btn.textContent = `Mengunduh… ${fetched.toLocaleString('id-ID')} baris`;
+      const { data, count, error } = await rawRowsQuery().order('created_at', { ascending: true }).range(offset, offset + BATCH - 1);
+      if (error) { setT('filterMsg', 'Gagal ekspor: ' + error.message); break; }
+      total = count ?? 0;
+      if (!data.length) break;
+      data.forEach(r => lines.push([r.created_at, r.state, r.pol, r.sim, r.pv_v, r.pv_a, r.pv_w, r.ld_v, r.ld_a, r.ld_w, r.bt_v, r.bt_a, r.bt_w, r.h2t, r.h2a, r.surp, r.srv].map(csvVal).join(',')));
+      offset += data.length; fetched += data.length;
+      if (data.length < BATCH) break;
+    }
+    if (total > CAP) setT('filterMsg', `CSV dibatasi ${CAP.toLocaleString('id-ID')} baris pertama dari ${total.toLocaleString('id-ID')} total — persempit rentang tanggal untuk data lengkap.`);
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `ems-${DEV}-mentah-${Date.now()}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+  } finally { csvBusy = false; btn.textContent = orig; }
+}
+$('csvBtn').addEventListener('click', downloadRawCsv);
+
+/* ================= LOG KEJADIAN ================= */
+const KIND_LABEL = { state: 'Status', polarity: 'Polaritas', sim: 'Simulasi' };
+function fmtEventVal(kind, v) {
+  if (v === null || v === undefined) return '—';
+  if (kind === 'polarity') return 'Kutub ' + (Number(v) + 1);
+  if (kind === 'sim') return v === 'true' ? 'ON' : 'OFF';
+  return v;
+}
+async function loadEvents() {
+  $('eventsBody').innerHTML = '<tr><td colspan="5" class="empty">Memuat…</td></tr>';
+  let q = sb.from('events').select('*', { count: 'exact' }).eq('device_id', DEV);
+  if (range.from) q = q.gte('created_at', range.from);
+  if (range.to) q = q.lte('created_at', range.to);
+  if ($('eventKindFilter').value) q = q.eq('kind', $('eventKindFilter').value);
+  const { data, count, error } = await q.order('created_at', { ascending: false }).range(evOffset, evOffset + EVENTS_PAGE - 1);
+  if (error) { $('eventsBody').innerHTML = `<tr><td colspan="5" class="empty">Gagal memuat: ${error.message}</td></tr>`; return; }
+  evTotal = count ?? 0;
+  if (!data.length) $('eventsBody').innerHTML = '<tr><td colspan="5" class="empty">Tidak ada kejadian pada filter ini</td></tr>';
+  else {
+    $('eventsBody').innerHTML = data.map(r => `<tr>
+      <td>${fmtDT(r.created_at)}</td>
+      <td class="kind-${r.kind}">${KIND_LABEL[r.kind] || r.kind}</td>
+      <td>${fmtEventVal(r.kind, r.from_val)}</td><td>→</td>
+      <td><b>${fmtEventVal(r.kind, r.to_val)}</b></td>
+    </tr>`).join('');
+  }
+  setT('eventsInfo', evTotal.toLocaleString('id-ID') + ' kejadian pada filter ini (terdeteksi otomatis tiap kali status/polaritas/simulasi berubah)');
+  updatePager('events', evOffset, evTotal, data.length, EVENTS_PAGE);
+}
+$('eventKindFilter').addEventListener('change', () => { evOffset = 0; loadEvents(); });
+$('eventsPrev').addEventListener('click', () => { evOffset = Math.max(0, evOffset - EVENTS_PAGE); loadEvents(); });
+$('eventsNext').addEventListener('click', () => { if (evOffset + EVENTS_PAGE < evTotal) { evOffset += EVENTS_PAGE; loadEvents(); } });
+
+/* ================= ENERGI HARIAN ================= */
+async function loadDaily() {
+  const days = Math.max(1, Math.min(365, num($('dailyDays').value, 30)));
+  $('dailyBody').innerHTML = '<tr><td colspan="5" class="empty">Memuat…</td></tr>';
+  const { data, error } = await sb.rpc('daily_energy', { p_device: DEV, p_days: days });
+  if (error) { $('dailyBody').innerHTML = `<tr><td colspan="5" class="empty">Gagal memuat: ${error.message}</td></tr>`; return; }
+  if (!data || !data.length) { $('dailyBody').innerHTML = '<tr><td colspan="5" class="empty">Belum ada data</td></tr>'; return; }
+  $('dailyBody').innerHTML = data.slice().reverse().map(r => `<tr>
+    <td>${r.day}</td><td>${num(r.pv_wh).toFixed(1)}</td><td>${num(r.ld_wh).toFixed(1)}</td>
+    <td>${num(r.bt_charge_wh).toFixed(1)}</td><td>${num(r.bt_discharge_wh).toFixed(1)}</td>
+  </tr>`).join('');
+}
+$('dailyBtn').addEventListener('click', loadDaily);
+
+/* ================= TAB ================= */
+$('tabBtns').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  [...$('tabBtns').children].forEach(x => x.classList.toggle('on', x === b));
+  ['raw', 'events', 'daily'].forEach(t => { $('tab-' + t).hidden = t !== b.dataset.tab; });
+});
+
+/* ================= INIT ================= */
+function loadAll() {
+  loadSummary();
+  rawOffset = 0; loadRaw();
+  evOffset = 0; loadEvents();
+}
+
+function init() {
+  if (!CONFIGURED) { $('setupNote').hidden = false; return; }
+  if (!window.supabase) { setT('filterMsg', 'Library Supabase gagal dimuat (perlu internet)'); return; }
+  sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY,
+    { auth: { persistSession: false, autoRefreshToken: false } });
+  $('main').hidden = false;
+  loadStateOptions();
+  applyPreset(168);
+  loadAll();
+  loadDaily();
+  refreshDeviceDot();
+  setInterval(refreshDeviceDot, 5000);
+}
+init();
+</script>
+</body>
+</html>
