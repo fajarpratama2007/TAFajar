@@ -312,6 +312,23 @@ input[type=checkbox]{accent-color:var(--orange);width:15px;height:15px;cursor:po
     <div class="progress" id="polProg"><div></div></div>
   </div>
 
+  <div class="sec">Proteksi Arus</div>
+  <div class="panel">
+    <div class="pol-row">
+      <div>
+        <div class="il">Batas Arus Cut-off (HHO/Beban)</div>
+        <div class="pol-now" id="cutNow">— A</div>
+        <div class="pol-msg" id="cutMsg">Servo mulai mengerem di 85% nilai ini, relay trip di atasnya. Rentang 1–15 A.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <input type="number" id="cutInput" min="1" max="15" step="0.5" value="7"
+          style="width:74px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 10px;font-size:13px;text-align:center;font-variant-numeric:tabular-nums">
+        <span style="font-size:12px;color:var(--muted)">A</span>
+        <button class="navlink" id="cutApply" type="button">Terapkan</button>
+      </div>
+    </div>
+  </div>
+
   <div class="sec">Simulasi Digital Twin</div>
   <div class="tw" id="simTw">
     <span class="t">Simulation Mode <span class="sbadge" id="simBadge">OFF</span></span>
@@ -812,8 +829,44 @@ function onState(row) {
   updCards(curData);
   updatePolarity(curData);
   syncSim(curData);
+  updateCutoffDisplay(curData);
   refreshOnline();
 }
+
+/* ================= PROTEKSI ARUS (cut-off) ================= */
+let cutBusy = false, cutInputTouched = false;
+
+function updateCutoffDisplay(d) {
+  const active = num(d.cut, NaN);
+  if (Number.isFinite(active)) setT('cutNow', active.toFixed(1) + ' A (aktif di alat)');
+  if (!cutInputTouched && Number.isFinite(active)) $('cutInput').value = active.toFixed(1);
+}
+
+async function loadOverloadSettings() {
+  const { data } = await sb.from('overload_settings').select('cutoff_a').eq('device_id', DEV).maybeSingle();
+  if (data && !cutInputTouched) $('cutInput').value = Number(data.cutoff_a).toFixed(1);
+}
+
+$('cutInput').addEventListener('input', () => { cutInputTouched = true; });
+
+$('cutApply').addEventListener('click', async () => {
+  if (cutBusy) return;
+  let v = parseFloat($('cutInput').value);
+  if (!Number.isFinite(v)) { setT('cutMsg', 'Masukkan angka yang valid'); return; }
+  v = Math.max(1, Math.min(15, v));
+  $('cutInput').value = v.toFixed(1);
+  if (!confirm('Ubah batas arus cut-off ke ' + v.toFixed(1) + ' A?\n\nIni parameter proteksi — pastikan nilainya aman untuk komponenmu.')) return;
+
+  cutBusy = true;
+  const btn = $('cutApply'); const orig = btn.textContent;
+  btn.textContent = 'Mengirim…'; btn.disabled = true;
+  setT('cutMsg', 'Mengirim perintah…');
+  const { error } = await sb.rpc('set_overload_cutoff', { p_device: DEV, p_cutoff: v });
+  btn.textContent = orig; btn.disabled = false; cutBusy = false;
+  cutInputTouched = false;
+  setT('cutMsg', error ? 'Gagal: ' + error.message
+    : 'Terkirim — aktif di perangkat dalam beberapa detik, dan tersimpan permanen (tahan mati listrik).');
+});
 
 function refreshOnline() {
   const on = isOnline();
@@ -1020,7 +1073,7 @@ function startApp() {
   firstState = true; lastSeen = 0; lastUpdatedAt = null;
   setT('histMsg', 'Mode Live: grafik terisi dari data yang masuk sejak halaman dibuka');
 
-  fetchState(); loadHistory(); loadSimSettings();
+  fetchState(); loadHistory(); loadSimSettings(); loadOverloadSettings();
   pingViewer();
   sb.channel('ems-' + DEV)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'device_state', filter: 'device_id=eq.' + DEV }, p => onState(p.new))
