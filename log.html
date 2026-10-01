@@ -208,6 +208,7 @@ table.dt tbody tr:last-child td{border-bottom:none}
           <th>HHO V</th><th>HHO A</th><th>HHO W</th>
           <th>Batt V</th><th>Batt A</th><th>Batt W</th>
           <th>H2 Target</th><th>H2 Raw</th><th>Surplus</th><th>Servo°</th>
+          <th>Batt Avg (W)</th><th>Koreksi Fuzzy (A)</th>
         </tr></thead>
         <tbody id="rawBody"></tbody>
       </table></div>
@@ -429,7 +430,7 @@ $('fState').addEventListener('change', () => { rawOffset = 0; loadRaw(); });
 
 function rawRowsQuery() {
   let q = sb.from('telemetry')
-    .select('created_at,state,sim,pol,pv_v,pv_a,pv_w,ld_v,ld_a,ld_w,bt_v,bt_a,bt_w,h2a,h2t,surp,srv', { count: 'exact' })
+    .select('created_at,state,sim,pol,pv_v,pv_a,pv_w,ld_v,ld_a,ld_w,bt_v,bt_a,bt_w,h2a,h2t,surp,srv,batt_avg_w,fuzzy_corr_a', { count: 'exact' })
     .eq('device_id', DEV);
   if (range.from) q = q.gte('created_at', range.from);
   if (range.to) q = q.lte('created_at', range.to);
@@ -438,12 +439,12 @@ function rawRowsQuery() {
 }
 
 async function loadRaw() {
-  $('rawBody').innerHTML = '<tr><td colspan="17" class="empty">Memuat…</td></tr>';
+  $('rawBody').innerHTML = '<tr><td colspan="19" class="empty">Memuat…</td></tr>';
   const { data, count, error } = await rawRowsQuery().order('created_at', { ascending: false }).range(rawOffset, rawOffset + RAW_PAGE - 1);
-  if (error) { $('rawBody').innerHTML = `<tr><td colspan="17" class="empty">Gagal memuat: ${error.message}</td></tr>`; return; }
+  if (error) { $('rawBody').innerHTML = `<tr><td colspan="19" class="empty">Gagal memuat: ${error.message}</td></tr>`; return; }
   rawTotal = count ?? 0;
   rawCount = data.length;
-  if (!data.length) { $('rawBody').innerHTML = '<tr><td colspan="17" class="empty">Tidak ada data pada filter ini</td></tr>'; }
+  if (!data.length) { $('rawBody').innerHTML = '<tr><td colspan="19" class="empty">Tidak ada data pada filter ini</td></tr>'; }
   else {
     $('rawBody').innerHTML = data.map(r => `<tr>
       <td>${fmtDT(r.created_at)}</td>
@@ -454,6 +455,8 @@ async function loadRaw() {
       <td>${num(r.ld_v).toFixed(1)}</td><td>${num(r.ld_a).toFixed(2)}</td><td>${num(r.ld_w).toFixed(1)}</td>
       <td>${num(r.bt_v).toFixed(1)}</td><td>${num(r.bt_a).toFixed(2)}</td><td>${num(r.bt_w).toFixed(1)}</td>
       <td>${num(r.h2t).toFixed(2)}</td><td>${num(r.h2a).toFixed(2)}</td><td>${num(r.surp).toFixed(1)}</td><td>${num(r.srv).toFixed(0)}</td>
+      <td>${r.batt_avg_w === null ? '—' : num(r.batt_avg_w).toFixed(2)}</td>
+      <td>${r.fuzzy_corr_a === null ? '—' : num(r.fuzzy_corr_a).toFixed(3)}</td>
     </tr>`).join('');
   }
   setT('rawInfo', rawTotal.toLocaleString('id-ID') + ' baris data mentah pada filter ini (1 baris = 1 sampel tiap 10 detik)');
@@ -475,7 +478,7 @@ async function downloadRawCsv() {
   if (csvBusy) return;
   csvBusy = true;
   const btn = $('csvBtn'); const orig = btn.textContent;
-  const head = 'waktu,state,polaritas,simulasi,pv_v,pv_a,pv_w,ld_v,ld_a,ld_w,bt_v,bt_a,bt_w,h2_target_a,h2_raw_a,surplus_w,servo_deg';
+  const head = 'waktu,state,polaritas,simulasi,pv_v,pv_a,pv_w,ld_v,ld_a,ld_w,bt_v,bt_a,bt_w,h2_target_a,h2_raw_a,surplus_w,servo_deg,batt_avg_w,fuzzy_corr_a';
   const lines = [head];
   const CAP = 50000, BATCH = 1000;
   let offset = 0, fetched = 0, total = Infinity;
@@ -486,7 +489,7 @@ async function downloadRawCsv() {
       if (error) { setT('filterMsg', 'Gagal ekspor: ' + error.message); break; }
       total = count ?? 0;
       if (!data.length) break;
-      data.forEach(r => lines.push([r.created_at, r.state, r.pol, r.sim, r.pv_v, r.pv_a, r.pv_w, r.ld_v, r.ld_a, r.ld_w, r.bt_v, r.bt_a, r.bt_w, r.h2t, r.h2a, r.surp, r.srv].map(csvVal).join(',')));
+      data.forEach(r => lines.push([r.created_at, r.state, r.pol, r.sim, r.pv_v, r.pv_a, r.pv_w, r.ld_v, r.ld_a, r.ld_w, r.bt_v, r.bt_a, r.bt_w, r.h2t, r.h2a, r.surp, r.srv, r.batt_avg_w, r.fuzzy_corr_a].map(csvVal).join(',')));
       offset += data.length; fetched += data.length;
       if (data.length < BATCH) break;
     }

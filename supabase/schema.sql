@@ -64,9 +64,13 @@ create table if not exists public.telemetry (
   pv_v real, pv_a real, pv_w real,
   ld_v real, ld_a real, ld_w real,
   bt_v real, bt_a real, bt_w real,
-  h2a  real, h2t  real, surp real, srv real
+  h2a  real, h2t  real, surp real, srv real,
+  batt_avg_w  real,   -- rata-rata daya baterai (W) yang dipakai kontrol fuzzy
+  fuzzy_corr_a real    -- koreksi fuzzy terakhir (A ekuivalen), -0.15..+0.15 saat tidak diklem
 );
 create index if not exists telemetry_dev_time on public.telemetry (device_id, created_at desc);
+alter table public.telemetry add column if not exists batt_avg_w   real;
+alter table public.telemetry add column if not exists fuzzy_corr_a real;
 
 alter table public.telemetry enable row level security;
 drop policy if exists tele_read on public.telemetry;
@@ -124,13 +128,15 @@ begin
 
   if p_log then
     insert into public.telemetry
-      (device_id, state, sim, pol, pv_v, pv_a, pv_w, ld_v, ld_a, ld_w, bt_v, bt_a, bt_w, h2a, h2t, surp, srv)
+      (device_id, state, sim, pol, pv_v, pv_a, pv_w, ld_v, ld_a, ld_w, bt_v, bt_a, bt_w, h2a, h2t, surp, srv,
+       batt_avg_w, fuzzy_corr_a)
     values (
       p_device, p_state->>'state', (p_state->>'sim')::boolean, (p_state->>'pol')::smallint,
       (p_state#>>'{pv,v}')::real, (p_state#>>'{pv,a}')::real, (p_state#>>'{pv,w}')::real,
       (p_state#>>'{ld,v}')::real, (p_state#>>'{ld,a}')::real, (p_state#>>'{ld,w}')::real,
       (p_state#>>'{bt,v}')::real, (p_state#>>'{bt,a}')::real, (p_state#>>'{bt,w}')::real,
-      (p_state->>'h2a')::real, (p_state->>'h2t')::real, (p_state->>'surp')::real, (p_state->>'srv')::real);
+      (p_state->>'h2a')::real, (p_state->>'h2t')::real, (p_state->>'surp')::real, (p_state->>'srv')::real,
+      (p_state->>'bavg')::real, (p_state->>'fcor')::real);
   end if;
 end $$;
 revoke all on function public.device_push(text, text, jsonb, boolean) from public;
